@@ -11,7 +11,7 @@ class Announcement extends Model
 {
     protected $fillable = [
         'author_id', 'title', 'body', 'category',
-        'is_urgent', 'is_published', 'published_at',
+        'is_urgent', 'is_published', 'published_at', 'expires_at',
     ];
 
     protected function casts(): array
@@ -20,6 +20,7 @@ class Announcement extends Model
             'is_urgent'    => 'boolean',
             'is_published' => 'boolean',
             'published_at' => 'datetime',
+            'expires_at'   => 'datetime',
         ];
     }
 

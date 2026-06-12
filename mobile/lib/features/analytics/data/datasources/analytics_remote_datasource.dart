@@ -60,17 +60,30 @@ class AnalyticsRemoteDatasource {
     }).toList();
   }
 
-  Future<SummaryAnalyticsEntity> getSummary() async {
+  Future<SummaryAnalyticsEntity> getSummary({String period = 'week'}) async {
     final res = await _client.get<Map<String, dynamic>>(
       ApiEndpoints.analyticsSummary,
+      queryParameters: {'period': period},
     );
     final d = res['data'] as Map<String, dynamic>;
+
+    final rawChart = d['chart_data'] as List<dynamic>? ?? [];
+    final chartData = rawChart.map((e) {
+      final m = e as Map<String, dynamic>;
+      return ChartDataPoint(
+        label: m['label'] as String? ?? '',
+        value: (m['value'] as num?)?.toDouble() ?? 0,
+      );
+    }).toList();
+
     return SummaryAnalyticsEntity(
-      thisWeekCompleted: (d['this_week_completed'] as num).toInt(),
-      lastWeekCompleted: (d['last_week_completed'] as num).toInt(),
-      weekChange:        (d['week_change'] as num).toInt(),
+      thisWeekCompleted: (d['this_week_completed'] as num?)?.toInt() ?? 0,
+      lastWeekCompleted: (d['last_week_completed'] as num?)?.toInt() ?? 0,
+      weekChange:        (d['week_change'] as num?)?.toInt() ?? 0,
       mostProductiveDay: d['most_productive_day'] as String? ?? '-',
-      activeSchedules:   (d['active_schedules'] as num).toInt(),
+      activeSchedules:   (d['active_schedules'] as num?)?.toInt() ?? 0,
+      period:            d['period'] as String? ?? period,
+      chartData:         chartData,
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/widgets/app_widgets.dart';
 import '../providers/auth_provider.dart';
@@ -69,7 +70,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final errorMsg = authState is AuthError ? (authState).message : null;
 
     ref.listen(authProvider, (_, next) {
-      if (next is AuthAuthenticated) context.go('/');
+      if (next is AuthAuthenticated) context.go(AppRoutes.dashboard);
     });
 
     return Scaffold(

@@ -33,6 +33,10 @@ import '../../features/calendar/presentation/screens/calendar_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 
+import '../../features/gamification/presentation/screens/daily_quest_screen.dart';
+import '../../features/gamification/presentation/screens/achievement_screen.dart';
+import '../../features/gamification/presentation/screens/leaderboard_screen.dart';
+
 import '../../shared/theme/app_colors.dart';
 
 part 'app_router.g.dart';
@@ -46,13 +50,13 @@ class AppRoutes {
   static const register = '/register';
   static const forgotPassword = '/forgot-password';
   static const dashboard = '/dashboard';
-  static const analytics = '/analytics';
-  static const attendance = '/attendance';
-  static const attendanceScan = '/attendance/scan';
-  static const attendanceGenerate = '/attendance/generate';
-  static const attendanceHistory = '/attendance/history';
-  static const announcement = '/announcement';
-  static const notification = '/notification';
+  static const analytics = '/dashboard/analytics';
+  static const attendance = '/dashboard/attendance';
+  static const attendanceScan = '/dashboard/attendance/scan';
+  static const attendanceGenerate = '/dashboard/attendance/generate';
+  static const attendanceHistory = '/dashboard/attendance/history';
+  static const announcement = '/dashboard/announcement';
+  static const notification = '/dashboard/notification';
   static const schedule = '/schedule';
   static const scheduleCreate = '/schedule/create';
   static const task = '/task';
@@ -60,13 +64,16 @@ class AppRoutes {
   static const calendar = '/calendar';
   static const profile = '/profile';
   static const profileEdit = '/profile/edit';
+  static const gamificationQuests = '/profile/gamification/quests';
+  static const gamificationAchievements = '/profile/gamification/achievements';
+  static const gamificationLeaderboard = '/profile/gamification/leaderboard';
 
   static String scheduleDetail(String id) => '/schedule/$id';
   static String scheduleEdit(String id) => '/schedule/$id/edit';
   static String taskDetail(String id) => '/task/$id';
   static String taskEdit(String id) => '/task/$id/edit';
-  static String announcementDetail(String id) => '/announcement/$id';
-  static String attendanceSession(String id) => '/attendance/session/$id';
+  static String announcementDetail(String id) => '/dashboard/announcement/$id';
+  static String attendanceSession(String id) => '/dashboard/attendance/session/$id';
 }
 
 // ─── Router provider ──────────────────────────────────────────────────────────
@@ -297,6 +304,21 @@ GoRouter appRouter(Ref ref) {
                     name: 'profile-edit',
                     builder: (_, __) => const EditProfileScreen(),
                   ),
+                  GoRoute(
+                    path: 'gamification/quests',
+                    name: 'gamification-quests',
+                    builder: (_, __) => const DailyQuestScreen(),
+                  ),
+                  GoRoute(
+                    path: 'gamification/achievements',
+                    name: 'gamification-achievements',
+                    builder: (_, __) => const AchievementScreen(),
+                  ),
+                  GoRoute(
+                    path: 'gamification/leaderboard',
+                    name: 'gamification-leaderboard',
+                    builder: (_, __) => const LeaderboardScreen(),
+                  ),
                 ],
               ),
             ],
@@ -323,14 +345,6 @@ class _RouterRefreshNotifier extends ChangeNotifier {
 }
 
 // ─── Shell widget ─────────────────────────────────────────────────────────────
-
-const _rootPaths = {
-  '/dashboard',
-  '/schedule',
-  '/task',
-  '/calendar',
-  '/profile'
-};
 
 class _AppShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
@@ -367,8 +381,6 @@ class _AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentPath = GoRouterState.of(context).uri.path;
-    final showNav = _rootPaths.contains(currentPath);
     final isDesktop = MediaQuery.of(context).size.width >= 900;
 
     if (isDesktop) {
@@ -380,16 +392,14 @@ class _AppShell extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(bottom: false, child: navigationShell),
-      bottomNavigationBar: showNav
-          ? _MobileNavBar(
-              currentIndex: navigationShell.currentIndex,
-              onTap: (i) => navigationShell.goBranch(
-                i,
-                initialLocation: i == navigationShell.currentIndex,
-              ),
-              destinations: _destinations,
-            )
-          : null,
+      bottomNavigationBar: _MobileNavBar(
+        currentIndex: navigationShell.currentIndex,
+        onTap: (i) => navigationShell.goBranch(
+          i,
+          initialLocation: i == navigationShell.currentIndex,
+        ),
+        destinations: _destinations,
+      ),
     );
   }
 }
@@ -417,7 +427,6 @@ class _MobileNavBar extends StatelessWidget {
         child: NavigationBar(
           selectedIndex: currentIndex,
           onDestinationSelected: onTap,
-          height: 60,
           destinations: destinations
               .map((d) => NavigationDestination(
                     icon: Icon(d.icon),

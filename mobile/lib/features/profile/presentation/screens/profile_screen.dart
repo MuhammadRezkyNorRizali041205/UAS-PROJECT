@@ -10,6 +10,7 @@ import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/widgets/error_state.dart';
 import '../../domain/entities/profile.dart';
 import '../providers/profile_provider.dart';
+import '../../../../features/gamification/presentation/widgets/gamification_profile_section.dart';
 import '../widgets/notification_prefs_sheet.dart';
 import '../widgets/profile_avatar_widget.dart';
 import '../widgets/profile_menu_item_widget.dart';
@@ -54,6 +55,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 14),
             _buildStats(profile),
             const SizedBox(height: 16),
+            const GamificationProfileSection(),
+            const SizedBox(height: 12),
             _buildMenuSection(
               title: 'Akun',
               children: [

@@ -6,7 +6,11 @@ use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\MeController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\AnalyticsController;
+use App\Http\Controllers\Api\V1\AnnouncementController;
 use App\Http\Controllers\Api\V1\AttendanceController;
+use App\Http\Controllers\Api\V1\GamificationController;
+use App\Http\Controllers\Api\V1\LeaderboardController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ScheduleController;
 use App\Http\Controllers\Api\V1\TaskController;
@@ -62,7 +66,16 @@ Route::prefix('v1')->group(function () {
         Route::get('attendance/stats',                  [AttendanceController::class, 'stats']);
 
         // Announcements
-        // Route::apiResource('announcements', AnnouncementController::class);
+        Route::get('announcements',      [AnnouncementController::class, 'index']);
+        Route::post('announcements',     [AnnouncementController::class, 'store']);
+        Route::get('announcements/{id}', [AnnouncementController::class, 'show']);
+
+        // Notifications — static routes before parameterized
+        Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::patch('notifications/read-all',   [NotificationController::class, 'markAllRead']);
+        Route::get('notifications',              [NotificationController::class, 'index']);
+        Route::patch('notifications/{id}/read',  [NotificationController::class, 'markRead']);
+        Route::delete('notifications/{id}',      [NotificationController::class, 'destroy']);
 
         // Analytics
         Route::get('analytics/dashboard', [AnalyticsController::class, 'dashboard']);
@@ -74,5 +87,16 @@ Route::prefix('v1')->group(function () {
         Route::put('profile', [ProfileController::class, 'update']);
         Route::post('profile/avatar', [ProfileController::class, 'updateAvatar']);
         Route::patch('profile/notifications', [ProfileController::class, 'updateNotifications']);
+
+        // Gamification
+        Route::prefix('gamification')->group(function () {
+            Route::get('profile',      [GamificationController::class, 'profile']);
+            Route::get('quests',       [GamificationController::class, 'quests']);
+            Route::get('achievements', [GamificationController::class, 'achievements']);
+            Route::get('history',      [GamificationController::class, 'history']);
+        });
+
+        // Leaderboard
+        Route::get('leaderboard', [LeaderboardController::class, 'index']);
     });
 });

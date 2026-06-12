@@ -9,6 +9,52 @@ part of 'analytics_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(AnalyticsPeriod)
+final analyticsPeriodProvider = AnalyticsPeriodProvider._();
+
+final class AnalyticsPeriodProvider
+    extends $NotifierProvider<AnalyticsPeriod, String> {
+  AnalyticsPeriodProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'analyticsPeriodProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$analyticsPeriodHash();
+
+  @$internal
+  @override
+  AnalyticsPeriod create() => AnalyticsPeriod();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String>(value),
+    );
+  }
+}
+
+String _$analyticsPeriodHash() => r'6c7d32f66097e7a46f5daa46703c1c238967d161';
+
+abstract class _$AnalyticsPeriod extends $Notifier<String> {
+  String build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<String, String>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<String, String>, String, Object?, Object?>;
+    return element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(analyticsDashboard)
 final analyticsDashboardProvider = AnalyticsDashboardProvider._();
 
@@ -122,4 +168,4 @@ final class AnalyticsSummaryProvider extends $FunctionalProvider<
   }
 }
 
-String _$analyticsSummaryHash() => r'6c8d7576f8c5f537c66d5bd2dbc1e075164338c8';
+String _$analyticsSummaryHash() => r'c2a23b17b08ac18873e6929e6bebb279e35dee14';

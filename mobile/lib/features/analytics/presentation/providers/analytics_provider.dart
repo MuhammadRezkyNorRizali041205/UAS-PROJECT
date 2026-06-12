@@ -6,6 +6,16 @@ import '../../domain/entities/analytics.dart';
 
 part 'analytics_provider.g.dart';
 
+// ── Period selector state (keepAlive so it survives screen exit) ───────────
+
+@Riverpod(keepAlive: true)
+class AnalyticsPeriod extends _$AnalyticsPeriod {
+  @override
+  String build() => 'week';
+
+  void setPeriod(String period) => state = period;
+}
+
 @riverpod
 Future<DashboardAnalyticsEntity> analyticsDashboard(Ref ref) async {
   final result = await ref.read(analyticsRepositoryProvider).getDashboard();
@@ -26,7 +36,9 @@ Future<List<HeatmapDayEntity>> analyticsHeatmap(Ref ref) async {
 
 @riverpod
 Future<SummaryAnalyticsEntity> analyticsSummary(Ref ref) async {
-  final result = await ref.read(analyticsRepositoryProvider).getSummary();
+  final period = ref.watch(analyticsPeriodProvider);
+  final result =
+      await ref.read(analyticsRepositoryProvider).getSummary(period: period);
   return result.when(
     success: (data) => data,
     failure: (msg, _) => throw Exception(msg),

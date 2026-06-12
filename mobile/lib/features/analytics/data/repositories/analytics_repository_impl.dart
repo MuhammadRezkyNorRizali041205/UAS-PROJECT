@@ -36,9 +36,11 @@ class AnalyticsRepositoryImpl {
     }
   }
 
-  Future<Result<SummaryAnalyticsEntity>> getSummary() async {
+  Future<Result<SummaryAnalyticsEntity>> getSummary({
+    String period = 'week',
+  }) async {
     try {
-      return Success(await _ds.getSummary());
+      return Success(await _ds.getSummary(period: period));
     } on AppException catch (e) {
       return Failure(e.message, exception: e);
     } catch (_) {

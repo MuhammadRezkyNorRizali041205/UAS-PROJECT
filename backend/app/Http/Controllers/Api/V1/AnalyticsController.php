@@ -27,7 +27,11 @@ class AnalyticsController extends Controller
 
     public function summary(Request $request): JsonResponse
     {
-        $data = $this->service->getSummary($request->user());
+        $period = in_array($request->query('period'), ['week', 'month', 'year'])
+            ? $request->query('period')
+            : 'week';
+
+        $data = $this->service->getSummary($request->user(), $period);
         return $this->success($data);
     }
 }

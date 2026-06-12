@@ -13,11 +13,18 @@ import '../providers/analytics_provider.dart';
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
 
+  static const _periods = [
+    ('week', 'Minggu'),
+    ('month', 'Bulan'),
+    ('year', 'Tahun'),
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashAsync    = ref.watch(analyticsDashboardProvider);
     final heatmapAsync = ref.watch(analyticsHeatmapProvider);
     final summaryAsync = ref.watch(analyticsSummaryProvider);
+    final period       = ref.watch(analyticsPeriodProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -34,54 +41,122 @@ class AnalyticsScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        color: AppColors.primary,
-        backgroundColor: AppColors.surface,
-        onRefresh: () async {
-          ref.invalidate(analyticsDashboardProvider);
-          ref.invalidate(analyticsHeatmapProvider);
-          ref.invalidate(analyticsSummaryProvider);
-          await Future.wait([
-            ref.read(analyticsDashboardProvider.future),
-            ref.read(analyticsHeatmapProvider.future),
-            ref.read(analyticsSummaryProvider.future),
-          ]);
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            summaryAsync.when(
-              loading: () => const _SummarySkeleton(),
-              error: (e, _) => _ErrorCard(message: e.toString()),
-              data: (s) => _SummarySection(summary: s),
+      body: Column(
+        children: [
+          // ── Period selector ────────────────────────────────────────────
+          Container(
+            height: 48,
+            color: AppColors.surface,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: _periods.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (_, i) {
+                final (key, label) = _periods[i];
+                final selected = key == period;
+                return GestureDetector(
+                  onTap: () => ref
+                      .read(analyticsPeriodProvider.notifier)
+                      .setPeriod(key),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppColors.primary
+                          : AppColors.surfaceElevated,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.border,
+                      ),
+                    ),
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        color: selected
+                            ? Colors.white
+                            : AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            const SizedBox(height: 20),
-            dashAsync.when(
-              loading: () => const _ChartSkeleton(height: 220),
-              error: (e, _) => _ErrorCard(message: e.toString()),
-              data: (d) => _TaskStatsSection(data: d),
+          ),
+
+          // ── Scrollable content ─────────────────────────────────────────
+          Expanded(
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
+              onRefresh: () async {
+                ref.invalidate(analyticsDashboardProvider);
+                ref.invalidate(analyticsHeatmapProvider);
+                ref.invalidate(analyticsSummaryProvider);
+                await Future.wait([
+                  ref.read(analyticsDashboardProvider.future),
+                  ref.read(analyticsHeatmapProvider.future),
+                  ref.read(analyticsSummaryProvider.future),
+                ]);
+              },
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  summaryAsync.when(
+                    loading: () => const _SummarySkeleton(),
+                    error: (e, _) => _ErrorCard(message: e.toString()),
+                    data: (s) => _SummarySection(summary: s),
+                  ),
+                  const SizedBox(height: 20),
+                  summaryAsync.when(
+                    loading: () => const _ChartSkeleton(height: 180),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (s) => s.chartData.isEmpty
+                        ? const SizedBox.shrink()
+                        : _ActivityChart(
+                            chartData: s.chartData,
+                            period: s.period,
+                          ),
+                  ),
+                  const SizedBox(height: 20),
+                  dashAsync.when(
+                    loading: () => const _ChartSkeleton(height: 220),
+                    error: (e, _) => _ErrorCard(message: e.toString()),
+                    data: (d) => _TaskStatsSection(data: d),
+                  ),
+                  const SizedBox(height: 20),
+                  dashAsync.when(
+                    loading: () => const _ChartSkeleton(height: 200),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (d) => _PriorityBarChart(byPriority: d.tasksByPriority),
+                  ),
+                  const SizedBox(height: 20),
+                  dashAsync.when(
+                    loading: () => const _ChartSkeleton(height: 220),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (d) => _CategoryPieChart(
+                        byCategory: d.schedulesByCategory),
+                  ),
+                  const SizedBox(height: 20),
+                  heatmapAsync.when(
+                    loading: () => const _ChartSkeleton(height: 160),
+                    error: (e, _) => _ErrorCard(message: e.toString()),
+                    data: (days) => _ActivityHeatmap(days: days),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            dashAsync.when(
-              loading: () => const _ChartSkeleton(height: 200),
-              error: (_, __) => const SizedBox.shrink(),
-              data: (d) => _PriorityBarChart(byPriority: d.tasksByPriority),
-            ),
-            const SizedBox(height: 20),
-            dashAsync.when(
-              loading: () => const _ChartSkeleton(height: 220),
-              error: (_, __) => const SizedBox.shrink(),
-              data: (d) => _CategoryPieChart(byCategory: d.schedulesByCategory),
-            ),
-            const SizedBox(height: 20),
-            heatmapAsync.when(
-              loading: () => const _ChartSkeleton(height: 160),
-              error: (e, _) => _ErrorCard(message: e.toString()),
-              data: (days) => _ActivityHeatmap(days: days),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -827,6 +902,133 @@ class _ActivityHeatmap extends StatelessWidget {
       'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des',
     ];
     return months[month];
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Activity chart (period bar chart)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ActivityChart extends StatelessWidget {
+  final List<ChartDataPoint> chartData;
+  final String period;
+  const _ActivityChart({required this.chartData, required this.period});
+
+  static const _periodLabel = {
+    'week': 'Aktivitas 7 Hari Terakhir',
+    'month': 'Aktivitas 30 Hari Terakhir',
+    'year': 'Aktivitas 12 Bulan Terakhir',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final maxVal =
+        chartData.fold(0.0, (a, b) => a > b.value ? a : b.value);
+
+    final bars = chartData.asMap().entries.map((e) {
+      return BarChartGroupData(
+        x: e.key,
+        barRods: [
+          BarChartRodData(
+            toY: e.value.value,
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary.withValues(alpha: 0.7),
+                AppColors.primary,
+              ],
+              begin: Alignment.bottomCenter,
+              end: Alignment.topCenter,
+            ),
+            width: chartData.length <= 7 ? 24 : 12,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(5)),
+          ),
+        ],
+      );
+    }).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _periodLabel[period] ?? 'Aktivitas',
+            style: AppTextStyles.headingSmall,
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 140,
+            child: BarChart(
+              BarChartData(
+                maxY: (maxVal + 1).ceilToDouble(),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (_) => const FlLine(
+                    color: AppColors.border,
+                    strokeWidth: 1,
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      getTitlesWidget: (v, meta) {
+                        if (v == 0 || v == meta.max) {
+                          return const SizedBox();
+                        }
+                        return Text(
+                          v.toInt().toString(),
+                          style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textMuted, fontSize: 10),
+                        );
+                      },
+                    ),
+                  ),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 22,
+                      getTitlesWidget: (v, _) {
+                        final i = v.toInt();
+                        if (i < 0 || i >= chartData.length) {
+                          return const SizedBox();
+                        }
+                        // Show every nth label to avoid crowding
+                        final step =
+                            chartData.length <= 7 ? 1 : chartData.length <= 12 ? 1 : 5;
+                        if (i % step != 0) return const SizedBox();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            chartData[i].label,
+                            style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textMuted, fontSize: 9),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                barGroups: bars,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

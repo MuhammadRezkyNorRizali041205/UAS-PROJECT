@@ -17,6 +17,7 @@ return new class extends Migration
             $table->boolean('is_urgent')->default(false);
             $table->boolean('is_published')->default(false);
             $table->timestamp('published_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
 
             $table->index('category');

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\UserActivity;
+use App\Observers\UserActivityObserver;
 use App\Repositories\Contracts\AttendanceRepositoryInterface;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
@@ -9,6 +11,8 @@ use App\Repositories\Eloquent\AttendanceRepository;
 use App\Repositories\Eloquent\ScheduleRepository;
 use App\Repositories\Eloquent\TaskRepository;
 use App\Services\AttendanceService;
+use App\Services\GamificationService;
+use App\Services\LeaderboardService;
 use App\Services\ScheduleService;
 use App\Services\TaskService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -39,6 +43,25 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        $this->registerGamification();
+    }
+
+    private function registerGamification(): void
+    {
+        UserActivity::observe(UserActivityObserver::class);
+
+        \Illuminate\Support\Facades\Event::listen(
+            \App\Events\GamificationLevelUp::class,
+            [\App\Listeners\SendGamificationNotification::class, 'handleLevelUp'],
+        );
+        \Illuminate\Support\Facades\Event::listen(
+            \App\Events\AchievementUnlocked::class,
+            [\App\Listeners\SendGamificationNotification::class, 'handleAchievement'],
+        );
+        \Illuminate\Support\Facades\Event::listen(
+            \App\Events\QuestCompleted::class,
+            [\App\Listeners\SendGamificationNotification::class, 'handleQuestCompleted'],
+        );
     }
 
     /**

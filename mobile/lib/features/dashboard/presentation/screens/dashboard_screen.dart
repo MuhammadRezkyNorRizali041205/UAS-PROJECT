@@ -8,6 +8,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
 import '../../../../shared/widgets/error_state.dart';
+import '../../../notification/presentation/providers/notification_provider.dart';
 import '../../domain/entities/dashboard_data.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/dashboard_skeleton.dart';
@@ -105,16 +106,17 @@ class _DashboardBody extends StatelessWidget {
 }
 
 // ─── Header ───────────────────────────────────────────────────────────────────
-class _Header extends StatelessWidget {
+class _Header extends ConsumerWidget {
   final String greeting;
   const _Header({required this.greeting});
 
   @override
-  Widget build(BuildContext context) {
-    // Split "Selamat pagi, Brian!" into greeting + name parts
+  Widget build(BuildContext context, WidgetRef ref) {
     final parts = greeting.split(', ');
     final greetPart = parts.length > 1 ? '${parts[0]},' : greeting;
     final namePart  = parts.length > 1 ? parts[1] : '';
+
+    final unread = ref.watch(notificationUnreadCountProvider).value ?? 0;
 
     return Row(
       children: [
@@ -133,15 +135,46 @@ class _Header extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
+        GestureDetector(
+          onTap: () => context.push('/dashboard/notification'),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.notifications_none_rounded,
+                    color: AppColors.primary, size: 22),
+              ),
+              if (unread > 0)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      color: AppColors.danger,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                        minWidth: 18, minHeight: 18),
+                    child: Text(
+                      unread > 99 ? '99+' : '$unread',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          child: const Icon(Icons.notifications_none_rounded,
-              color: AppColors.primary, size: 22),
         ),
       ],
     );

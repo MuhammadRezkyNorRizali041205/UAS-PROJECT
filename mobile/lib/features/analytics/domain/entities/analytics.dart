@@ -39,12 +39,20 @@ class HeatmapDayEntity {
   const HeatmapDayEntity({required this.date, required this.count});
 }
 
+class ChartDataPoint {
+  final String label;
+  final double value;
+  const ChartDataPoint({required this.label, required this.value});
+}
+
 class SummaryAnalyticsEntity {
   final int thisWeekCompleted;
   final int lastWeekCompleted;
   final int weekChange;
   final String mostProductiveDay;
   final int activeSchedules;
+  final String period;
+  final List<ChartDataPoint> chartData;
 
   const SummaryAnalyticsEntity({
     required this.thisWeekCompleted,
@@ -52,5 +60,7 @@ class SummaryAnalyticsEntity {
     required this.weekChange,
     required this.mostProductiveDay,
     required this.activeSchedules,
+    this.period = 'week',
+    this.chartData = const [],
   });
 }

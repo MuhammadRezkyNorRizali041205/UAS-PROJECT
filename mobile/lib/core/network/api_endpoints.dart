@@ -29,6 +29,11 @@ class ApiEndpoints {
   // Announcements
   static const String announcements = '/announcements';
 
+  // Notifications
+  static const String notifications = '/notifications';
+  static const String notificationsUnreadCount = '/notifications/unread-count';
+  static const String notificationsReadAll = '/notifications/read-all';
+
   // Analytics
   static const String analyticsDashboard = '/analytics/dashboard';
   static const String analyticsHeatmap = '/analytics/heatmap';
@@ -38,4 +43,13 @@ class ApiEndpoints {
   static const String profile = '/profile';
   static const String profileAvatar = '/profile/avatar';
   static const String profileNotifications = '/profile/notifications';
+
+  // Gamification
+  static const String gamificationProfile      = '/gamification/profile';
+  static const String gamificationQuests       = '/gamification/quests';
+  static const String gamificationAchievements = '/gamification/achievements';
+  static const String gamificationHistory      = '/gamification/history';
+
+  // Leaderboard
+  static const String leaderboard = '/leaderboard';
 }

@@ -172,7 +172,7 @@ class AnalyticsService
 
     // ─── Summary ──────────────────────────────────────────────────────────────
 
-    public function getSummary(User $user): array
+    public function getSummary(User $user, string $period = 'week'): array
     {
         $thisWeekCompleted = Task::forUser($user->id)
             ->where('status', 'completed')
@@ -196,7 +196,18 @@ class AnalyticsService
 
         $dayNames = ['', 'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
+        $chartData       = $this->getActivityChartData($user, $period);
+        $totalActivities = array_sum(array_column($chartData, 'value'));
+        $completedTasks  = Task::forUser($user->id)
+            ->where('status', 'completed')
+            ->where('completed_at', '>=', $this->periodStart($period))
+            ->count();
+        $totalTasksInPeriod = Task::forUser($user->id)
+            ->where('created_at', '>=', $this->periodStart($period))
+            ->count();
+
         return [
+            // Backward-compatible existing fields
             'this_week_completed' => $thisWeekCompleted,
             'last_week_completed' => $lastWeekCompleted,
             'week_change'         => $thisWeekCompleted - $lastWeekCompleted,
@@ -204,7 +215,98 @@ class AnalyticsService
             'active_schedules'    => Schedule::where('user_id', $user->id)
                 ->where('is_active', true)
                 ->count(),
+            // New period-based fields
+            'period'              => $period,
+            'chart_data'          => $chartData,
+            'summary'             => [
+                'total_activities' => $totalActivities,
+                'completed_tasks'  => $completedTasks,
+                'completion_rate'  => $totalTasksInPeriod > 0
+                    ? round(($completedTasks / $totalTasksInPeriod) * 100, 1)
+                    : 0.0,
+                'most_active_day'  => $topDay ? ($dayNames[$topDay->dow] ?? '-') : '-',
+                'streak'           => $this->streak($user),
+            ],
         ];
+    }
+
+    private function periodStart(string $period): Carbon
+    {
+        return match ($period) {
+            'month' => now()->subDays(29)->startOfDay(),
+            'year'  => now()->subMonths(11)->startOfMonth(),
+            default => now()->subDays(6)->startOfDay(), // week
+        };
+    }
+
+    private function getActivityChartData(User $user, string $period): array
+    {
+        $dayNamesShort = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        $monthNames    = [
+            '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+            'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des',
+        ];
+
+        if ($period === 'year') {
+            // 12 months: group by year-month
+            $data = DB::table('user_activities')
+                ->where('user_id', $user->id)
+                ->where('activity_date', '>=', now()->subMonths(11)->startOfMonth()->toDateString())
+                ->selectRaw("DATE_FORMAT(activity_date, '%Y-%m') as ym, COUNT(*) as cnt")
+                ->groupBy('ym')
+                ->pluck('cnt', 'ym');
+
+            $result = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $m     = now()->subMonths($i);
+                $key   = $m->format('Y-m');
+                $result[] = [
+                    'label' => $monthNames[(int) $m->format('n')],
+                    'value' => (float) ($data[$key] ?? 0),
+                ];
+            }
+            return $result;
+        }
+
+        if ($period === 'month') {
+            // 30 days: group by date
+            $data = DB::table('user_activities')
+                ->where('user_id', $user->id)
+                ->where('activity_date', '>=', now()->subDays(29)->toDateString())
+                ->selectRaw('activity_date as dt, COUNT(*) as cnt')
+                ->groupBy('dt')
+                ->pluck('cnt', 'dt');
+
+            $result = [];
+            for ($i = 29; $i >= 0; $i--) {
+                $d   = now()->subDays($i);
+                $key = $d->toDateString();
+                $result[] = [
+                    'label' => $d->format('j'),
+                    'value' => (float) ($data[$key] ?? 0),
+                ];
+            }
+            return $result;
+        }
+
+        // week: 7 days
+        $data = DB::table('user_activities')
+            ->where('user_id', $user->id)
+            ->where('activity_date', '>=', now()->subDays(6)->toDateString())
+            ->selectRaw('activity_date as dt, COUNT(*) as cnt')
+            ->groupBy('dt')
+            ->pluck('cnt', 'dt');
+
+        $result = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $d   = now()->subDays($i);
+            $key = $d->toDateString();
+            $result[] = [
+                'label' => $dayNamesShort[$d->dayOfWeek],
+                'value' => (float) ($data[$key] ?? 0),
+            ];
+        }
+        return $result;
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
