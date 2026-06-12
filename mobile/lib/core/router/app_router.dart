@@ -12,10 +12,6 @@ import '../../features/auth/presentation/screens/splash_screen.dart';
 
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_screen.dart';
-import '../../features/attendance/presentation/screens/attendance_screen.dart';
-import '../../features/attendance/presentation/screens/qr_scanner_screen.dart';
-import '../../features/attendance/presentation/screens/qr_generator_screen.dart';
-import '../../features/attendance/presentation/screens/attendance_history_screen.dart';
 import '../../features/announcement/presentation/screens/announcement_feed_screen.dart';
 import '../../features/announcement/presentation/screens/announcement_detail_screen.dart';
 import '../../features/notification/presentation/screens/notification_screen.dart';
@@ -30,12 +26,24 @@ import '../../features/task/presentation/screens/task_detail_screen.dart';
 
 import '../../features/calendar/presentation/screens/calendar_screen.dart';
 
+import '../../features/attendance/presentation/screens/attendance_screen.dart';
+import '../../features/attendance/presentation/screens/qr_scanner_screen.dart';
+import '../../features/attendance/presentation/screens/qr_generator_screen.dart';
+import '../../features/attendance/presentation/screens/attendance_history_screen.dart';
+
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 
 import '../../features/gamification/presentation/screens/daily_quest_screen.dart';
 import '../../features/gamification/presentation/screens/achievement_screen.dart';
 import '../../features/gamification/presentation/screens/leaderboard_screen.dart';
+
+import '../../features/chat/presentation/screens/conversation_list_screen.dart';
+import '../../features/chat/presentation/screens/chat_screen.dart';
+import '../../features/chat/presentation/screens/search_user_screen.dart';
+import '../../features/chat/presentation/screens/create_group_screen.dart';
+import '../../features/feed/presentation/screens/social_feed_screen.dart';
+import '../../features/friend/presentation/screens/friend_list_screen.dart';
 
 import '../../shared/theme/app_colors.dart';
 
@@ -45,40 +53,62 @@ part 'app_router.g.dart';
 class AppRoutes {
   AppRoutes._();
 
-  static const splash = '/splash';
-  static const login = '/login';
-  static const register = '/register';
+  static const splash         = '/splash';
+  static const login          = '/login';
+  static const register       = '/register';
   static const forgotPassword = '/forgot-password';
-  static const dashboard = '/dashboard';
-  static const analytics = '/dashboard/analytics';
-  static const attendance = '/dashboard/attendance';
-  static const attendanceScan = '/dashboard/attendance/scan';
-  static const attendanceGenerate = '/dashboard/attendance/generate';
-  static const attendanceHistory = '/dashboard/attendance/history';
-  static const announcement = '/dashboard/announcement';
-  static const notification = '/dashboard/notification';
-  static const schedule = '/schedule';
+
+  // ── Bottom nav roots ───────────────────────────────────────────────────────
+  static const dashboard  = '/dashboard';
+  static const schedule   = '/schedule';
+  static const task       = '/task';
+  static const chat       = '/chat';
+  static const profile    = '/profile';
+
+  // ── Full-screen feature routes (no bottom nav) ─────────────────────────────
+  static const calendar   = '/calendar';
+  static const attendance = '/attendance';
+  static const feed       = '/feed';
+  static const friends    = '/friends';
+
+  // ── Dashboard sub-routes ───────────────────────────────────────────────────
+  static const analytics     = '/dashboard/analytics';
+  static const announcement  = '/dashboard/announcement';
+  static const notification  = '/dashboard/notification';
+
+  // ── Attendance sub-routes (now top-level) ──────────────────────────────────
+  static const attendanceScan     = '/attendance/scan';
+  static const attendanceGenerate = '/attendance/generate';
+  static const attendanceHistory  = '/attendance/history';
+
+  // ── Schedule sub-routes ────────────────────────────────────────────────────
   static const scheduleCreate = '/schedule/create';
-  static const task = '/task';
+
+  // ── Task sub-routes ────────────────────────────────────────────────────────
   static const taskCreate = '/task/create';
-  static const calendar = '/calendar';
-  static const profile = '/profile';
-  static const profileEdit = '/profile/edit';
-  static const gamificationQuests = '/profile/gamification/quests';
-  static const gamificationAchievements = '/profile/gamification/achievements';
+
+  // ── Profile sub-routes ─────────────────────────────────────────────────────
+  static const profileEdit             = '/profile/edit';
+  static const gamificationQuests      = '/profile/gamification/quests';
+  static const gamificationAchievements= '/profile/gamification/achievements';
   static const gamificationLeaderboard = '/profile/gamification/leaderboard';
 
-  static String scheduleDetail(String id) => '/schedule/$id';
-  static String scheduleEdit(String id) => '/schedule/$id/edit';
-  static String taskDetail(String id) => '/task/$id';
-  static String taskEdit(String id) => '/task/$id/edit';
-  static String announcementDetail(String id) => '/dashboard/announcement/$id';
-  static String attendanceSession(String id) => '/dashboard/attendance/session/$id';
+  // ── Chat sub-routes ────────────────────────────────────────────────────────
+  static const chatNew      = '/chat/new';
+  static const chatNewGroup = '/chat/new-group';
+  static String chatConversation(String id) => '/chat/$id';
+
+  // ── Dynamic routes ─────────────────────────────────────────────────────────
+  static String scheduleDetail(String id)      => '/schedule/$id';
+  static String scheduleEdit(String id)        => '/schedule/$id/edit';
+  static String taskDetail(String id)          => '/task/$id';
+  static String taskEdit(String id)            => '/task/$id/edit';
+  static String announcementDetail(String id)  => '/dashboard/announcement/$id';
 }
 
 // ─── Router provider ──────────────────────────────────────────────────────────
 //
-// KEY FIX: Do NOT use ref.watch(authProvider) here — that recreates the entire
+// KEY: Do NOT use ref.watch(authProvider) here — that recreates the entire
 // GoRouter on every auth-state change, resetting navigation to initialLocation.
 // Instead, use a ChangeNotifier with refreshListenable so GoRouter re-evaluates
 // the redirect without rebuilding the router instance.
@@ -87,11 +117,9 @@ class AppRoutes {
 GoRouter appRouter(Ref ref) {
   final notifier = _RouterRefreshNotifier();
 
-  // Listen to auth state changes and notify GoRouter to re-run redirect
   ref.listen<AuthState>(authProvider, (_, next) => notifier.update(next));
   ref.onDispose(notifier.dispose);
 
-  // Seed with the current state so the first redirect is correct
   notifier.update(ref.read(authProvider));
 
   return GoRouter(
@@ -99,34 +127,26 @@ GoRouter appRouter(Ref ref) {
     debugLogDiagnostics: false,
     refreshListenable: notifier,
     redirect: (context, state) {
-      final path = state.matchedLocation;
+      final path      = state.matchedLocation;
       final authState = notifier.authState;
 
-      final isSplash = path == AppRoutes.splash;
+      final isSplash   = path == AppRoutes.splash;
       final isAuthRoute = path == AppRoutes.login ||
           path == AppRoutes.register ||
           path == AppRoutes.forgotPassword;
 
-      // Still checking session — don't interfere with navigation.
-      // Splash owns initial routing; blocking here causes bounce-back loop.
-      if (authState is AuthInitial || authState is AuthLoading) {
-        return null;
-      }
+      if (authState is AuthInitial || authState is AuthLoading) return null;
 
-      // Authenticated — push away from splash / auth screens
       if (authState is AuthAuthenticated) {
         if (isSplash || isAuthRoute) return AppRoutes.dashboard;
         return null;
       }
 
-      // Unauthenticated / error — redirect away from protected routes AND splash
-      // FIX: previously only redirected if !isAuthRoute && !isSplash
-      //      that kept users stuck on splash forever when unauthenticated
       if (!isAuthRoute) return AppRoutes.login;
       return null;
     },
     routes: [
-      // ─── Splash & Auth ─────────────────────────────────────────────────
+      // ─── Splash & Auth ────────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.splash,
         name: 'splash',
@@ -148,12 +168,52 @@ GoRouter appRouter(Ref ref) {
         builder: (_, __) => const ForgotPasswordScreen(),
       ),
 
-      // ─── Main App Shell ────────────────────────────────────────────────
+      // ─── Full-screen routes (pushed over shell, no bottom nav) ───────
+      GoRoute(
+        path: AppRoutes.calendar,
+        name: 'calendar',
+        builder: (_, __) => const CalendarScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.attendance,
+        name: 'attendance',
+        builder: (_, __) => const AttendanceScreen(),
+        routes: [
+          GoRoute(
+            path: 'scan',
+            name: 'attendance-scan',
+            builder: (_, __) => const QrScannerScreen(),
+          ),
+          GoRoute(
+            path: 'generate',
+            name: 'attendance-generate',
+            builder: (_, __) => const QrGeneratorScreen(),
+          ),
+          GoRoute(
+            path: 'history',
+            name: 'attendance-history',
+            builder: (_, __) => const AttendanceHistoryScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.feed,
+        name: 'feed',
+        builder: (_, __) => const SocialFeedScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.friends,
+        name: 'friends',
+        builder: (_, __) => const FriendListScreen(),
+      ),
+
+      // ─── Main App Shell (5 branches) ──────────────────────────────────
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             _AppShell(navigationShell: navigationShell),
         branches: [
-          // ── Branch 0: Home / Dashboard ──────────────────────────────
+
+          // ── Branch 0: Dashboard ──────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -165,28 +225,6 @@ GoRouter appRouter(Ref ref) {
                     path: 'analytics',
                     name: 'analytics',
                     builder: (_, __) => const AnalyticsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'attendance',
-                    name: 'attendance',
-                    builder: (_, __) => const AttendanceScreen(),
-                    routes: [
-                      GoRoute(
-                        path: 'scan',
-                        name: 'attendance-scan',
-                        builder: (_, __) => const QrScannerScreen(),
-                      ),
-                      GoRoute(
-                        path: 'generate',
-                        name: 'attendance-generate',
-                        builder: (_, __) => const QrGeneratorScreen(),
-                      ),
-                      GoRoute(
-                        path: 'history',
-                        name: 'attendance-history',
-                        builder: (_, __) => const AttendanceHistoryScreen(),
-                      ),
-                    ],
                   ),
                   GoRoute(
                     path: 'announcement',
@@ -212,7 +250,7 @@ GoRouter appRouter(Ref ref) {
             ],
           ),
 
-          // ── Branch 1: Schedule ───────────────────────────────────────
+          // ── Branch 1: Schedule ────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -246,7 +284,7 @@ GoRouter appRouter(Ref ref) {
             ],
           ),
 
-          // ── Branch 2: Task ───────────────────────────────────────────
+          // ── Branch 2: Task ────────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -280,18 +318,37 @@ GoRouter appRouter(Ref ref) {
             ],
           ),
 
-          // ── Branch 3: Calendar ───────────────────────────────────────
+          // ── Branch 3: Chat ────────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.calendar,
-                name: 'calendar',
-                builder: (_, __) => const CalendarScreen(),
+                path: AppRoutes.chat,
+                name: 'chat',
+                builder: (_, __) => const ConversationListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'new',
+                    name: 'chat-new',
+                    builder: (_, __) => const SearchUserScreen(),
+                  ),
+                  GoRoute(
+                    path: 'new-group',
+                    name: 'chat-new-group',
+                    builder: (_, __) => const CreateGroupScreen(),
+                  ),
+                  GoRoute(
+                    path: ':conversationId',
+                    name: 'chat-conversation',
+                    builder: (_, state) => ChatScreen(
+                      conversationId: state.pathParameters['conversationId']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
 
-          // ── Branch 4: Profile ────────────────────────────────────────
+          // ── Branch 4: Profile ─────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -337,7 +394,7 @@ class _RouterRefreshNotifier extends ChangeNotifier {
   void update(AuthState newState) {
     if (_authState.runtimeType == newState.runtimeType &&
         newState is! AuthAuthenticated) {
-      return; // Skip redundant notifications
+      return;
     }
     _authState = newState;
     notifyListeners();
@@ -348,9 +405,9 @@ class _RouterRefreshNotifier extends ChangeNotifier {
 
 class _AppShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
-
   const _AppShell({required this.navigationShell});
 
+  // 5 tabs — Beranda, Jadwal, Tugas, Chat, Profil
   static const _destinations = [
     (
       icon: Icons.dashboard_outlined,
@@ -368,9 +425,9 @@ class _AppShell extends ConsumerWidget {
       label: 'Tugas'
     ),
     (
-      icon: Icons.calendar_month_outlined,
-      active: Icons.calendar_month_rounded,
-      label: 'Kalender'
+      icon: Icons.chat_bubble_outline_rounded,
+      active: Icons.chat_bubble_rounded,
+      label: 'Chat'
     ),
     (
       icon: Icons.person_outline_rounded,

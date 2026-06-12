@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -95,5 +96,33 @@ class User extends Authenticatable
     public function isLecturer(): bool
     {
         return $this->role === 'lecturer';
+    }
+
+    // ─── Chat relationships ────────────────────────────────────────────────────
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->withPivot(['joined_at', 'last_read_at', 'is_admin'])
+            ->withTimestamps()
+            ->orderByPivot('joined_at', 'desc');
+    }
+
+    public function friends(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'friendships',
+            'requester_id',
+            'addressee_id'
+        )->wherePivot('status', 'accepted')
+         ->union(
+             $this->belongsToMany(
+                 User::class,
+                 'friendships',
+                 'addressee_id',
+                 'requester_id'
+             )->wherePivot('status', 'accepted')
+         );
     }
 }

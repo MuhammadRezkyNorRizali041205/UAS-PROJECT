@@ -33,7 +33,7 @@ final class AnnouncementFeedProvider
   AnnouncementFeed create() => AnnouncementFeed();
 }
 
-String _$announcementFeedHash() => r'adf234c39122846c539363d78f33606b4c5908e5';
+String _$announcementFeedHash() => r'd1a7c50ef614344144ff5263ab344cbb3eb56e7b';
 
 abstract class _$AnnouncementFeed
     extends $AsyncNotifier<List<AnnouncementModel>> {

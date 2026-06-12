@@ -1,6 +1,5 @@
 // lib/features/notification/presentation/providers/notification_provider.dart
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/models/notification_model.dart';
@@ -58,7 +57,7 @@ class NotificationFeed extends _$NotificationFeed {
         _hasMore = currentPage < lastPage;
 
         if (reset) return items;
-        return [...(state.valueOrNull ?? []), ...items];
+        return [...(state.value ?? []), ...items];
       },
       failure: (msg, _) => throw Exception(msg),
     );
@@ -75,7 +74,7 @@ class NotificationFeed extends _$NotificationFeed {
 
   Future<void> loadMore() async {
     if (!_hasMore || state is AsyncLoading) return;
-    final existing = state.valueOrNull ?? [];
+    final existing = state.value ?? [];
     _page++;
     final result = await ref
         .read(notificationRepositoryProvider)
@@ -110,7 +109,7 @@ class NotificationFeed extends _$NotificationFeed {
         await ref.read(notificationRepositoryProvider).markRead(id);
     result.when(
       success: (_) {
-        final updated = (state.valueOrNull ?? []).map((n) {
+        final updated = (state.value ?? []).map((n) {
           if (n.id == id) {
             return NotificationModel(
               id: n.id,
@@ -139,7 +138,7 @@ class NotificationFeed extends _$NotificationFeed {
         await ref.read(notificationRepositoryProvider).markAllRead();
     result.when(
       success: (_) {
-        final updated = (state.valueOrNull ?? []).map((n) {
+        final updated = (state.value ?? []).map((n) {
           return NotificationModel(
             id: n.id,
             type: n.type,
@@ -166,7 +165,7 @@ class NotificationFeed extends _$NotificationFeed {
     result.when(
       success: (_) {
         final updated =
-            (state.valueOrNull ?? []).where((n) => n.id != id).toList();
+            (state.value ?? []).where((n) => n.id != id).toList();
         state = AsyncData(updated);
         ref.invalidate(notificationUnreadCountProvider);
       },

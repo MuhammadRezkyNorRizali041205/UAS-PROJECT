@@ -45,7 +45,7 @@ class AnnouncementFeed extends _$AnnouncementFeed {
         _hasMore = currentPage < lastPage;
 
         if (reset) return items;
-        return [...(state.valueOrNull ?? []), ...items];
+        return [...(state.value ?? []), ...items];
       },
       failure: (msg, _) => throw Exception(msg),
     );
@@ -62,7 +62,7 @@ class AnnouncementFeed extends _$AnnouncementFeed {
 
   Future<void> loadMore() async {
     if (!_hasMore || state is AsyncLoading) return;
-    final existing = state.valueOrNull ?? [];
+    final existing = state.value ?? [];
     _page++;
     final result = await ref
         .read(announcementRepositoryProvider)

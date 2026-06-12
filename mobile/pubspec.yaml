@@ -55,6 +55,10 @@ dependencies:
   permission_handler: ^11.3.1
   connectivity_plus: ^6.0.3
 
+  # Chat & Social
+  web_socket_channel: ^2.4.0
+  timeago: ^3.6.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

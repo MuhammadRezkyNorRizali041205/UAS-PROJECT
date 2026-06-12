@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
+        channels: __DIR__.'/../routes/channels.php',
         api: __DIR__ . '/../routes/api.php',
         health: '/up',
     )

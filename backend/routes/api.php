@@ -8,11 +8,14 @@ use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\AnnouncementController;
 use App\Http\Controllers\Api\V1\AttendanceController;
+use App\Http\Controllers\Api\V1\ChatController;
+use App\Http\Controllers\Api\V1\FriendController;
 use App\Http\Controllers\Api\V1\GamificationController;
 use App\Http\Controllers\Api\V1\LeaderboardController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ScheduleController;
+use App\Http\Controllers\Api\V1\SocialFeedController;
 use App\Http\Controllers\Api\V1\TaskController;
 use Illuminate\Support\Facades\Route;
 
@@ -98,5 +101,35 @@ Route::prefix('v1')->group(function () {
 
         // Leaderboard
         Route::get('leaderboard', [LeaderboardController::class, 'index']);
+
+        // ─── Chat ─────────────────────────────────────────────────────────────
+        Route::prefix('chat')->group(function () {
+            Route::get('conversations',                          [ChatController::class, 'conversations']);
+            Route::post('conversations/direct',                  [ChatController::class, 'createDirect']);
+            Route::post('conversations/group',                   [ChatController::class, 'createGroup']);
+            Route::get('conversations/{id}/messages',            [ChatController::class, 'messages']);
+            Route::post('conversations/{id}/messages',           [ChatController::class, 'sendMessage']);
+            Route::post('conversations/{id}/share-achievement',  [ChatController::class, 'shareAchievement']);
+            Route::post('conversations/{id}/read',               [ChatController::class, 'markRead']);
+            Route::post('conversations/{id}/typing',             [ChatController::class, 'typing']);
+            Route::get('users/search',                           [ChatController::class, 'searchUsers']);
+        });
+
+        // ─── Social Feed ──────────────────────────────────────────────────────
+        Route::prefix('feed')->group(function () {
+            Route::get('',          [SocialFeedController::class, 'index']);
+            Route::post('',         [SocialFeedController::class, 'store']);
+            Route::get('my',        [SocialFeedController::class, 'myFeed']);
+            Route::post('{id}/like',[SocialFeedController::class, 'like']);
+        });
+
+        // ─── Friends ──────────────────────────────────────────────────────────
+        Route::prefix('friends')->group(function () {
+            Route::get('',             [FriendController::class, 'index']);
+            Route::get('requests',     [FriendController::class, 'requests']);
+            Route::post('request',     [FriendController::class, 'sendRequest']);
+            Route::post('{id}/accept', [FriendController::class, 'accept']);
+            Route::delete('{id}',      [FriendController::class, 'destroy']);
+        });
     });
 });

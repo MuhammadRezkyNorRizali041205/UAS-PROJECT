@@ -99,8 +99,98 @@ class _DashboardBody extends StatelessWidget {
           child: _DeadlinesSection(deadlines: data.upcomingDeadlines),
         ),
 
+        // ── Quick Access: Kalender & Presensi ────────────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+            child: _SectionHeader(
+              title: 'Akses Cepat',
+              icon: Icons.apps_rounded,
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _QuickAccessCard(
+                    icon: Icons.calendar_month_rounded,
+                    label: 'Kalender',
+                    color: Colors.blue,
+                    onTap: () => context.push(AppRoutes.calendar),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickAccessCard(
+                    icon: Icons.qr_code_scanner_rounded,
+                    label: 'Presensi',
+                    color: Colors.green,
+                    onTap: () => context.push(AppRoutes.attendance),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickAccessCard(
+                    icon: Icons.emoji_events_rounded,
+                    label: 'Feed',
+                    color: Colors.orange,
+                    onTap: () => context.push(AppRoutes.feed),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
+    );
+  }
+}
+
+class _QuickAccessCard extends StatelessWidget {
+  const _QuickAccessCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -75,6 +75,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: 12),
             _buildMenuSection(
+              title: 'Sosial',
+              children: [
+                ProfileMenuItemWidget(
+                  icon: Icons.people_outline_rounded,
+                  label: 'Teman',
+                  onTap: () => context.push(AppRoutes.friends),
+                ),
+                ProfileMenuItemWidget(
+                  icon: Icons.emoji_events_outlined,
+                  label: 'Feed Pencapaian',
+                  onTap: () => context.push(AppRoutes.feed),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildMenuSection(
               title: 'Aplikasi',
               children: [
                 ProfileMenuItemWidget(

@@ -20,7 +20,7 @@ class _NavItem {
 
 const _navItems = [
   _NavItem(
-    path: '/',
+    path: '/dashboard',
     icon: Icons.dashboard_outlined,
     activeIcon: Icons.dashboard_rounded,
     label: 'Beranda',
@@ -42,6 +42,12 @@ const _navItems = [
     icon: Icons.calendar_month_outlined,
     activeIcon: Icons.calendar_month_rounded,
     label: 'Kalender',
+  ),
+  _NavItem(
+    path: '/attendance',
+    icon: Icons.qr_code_scanner_outlined,
+    activeIcon: Icons.qr_code_scanner_rounded,
+    label: 'Presensi',
   ),
   _NavItem(
     path: '/profile',

@@ -67,7 +67,7 @@ final class NotificationFeedProvider
   NotificationFeed create() => NotificationFeed();
 }
 
-String _$notificationFeedHash() => r'349871b29bdaaf6d81e5d8285c153bf05f90c776';
+String _$notificationFeedHash() => r'9f176174318ed7772de6efc4bfd4bd2988f5a432';
 
 abstract class _$NotificationFeed
     extends $AsyncNotifier<List<NotificationModel>> {
