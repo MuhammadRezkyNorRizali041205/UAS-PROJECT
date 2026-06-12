@@ -132,37 +132,57 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildInput() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                onChanged: _onTextChanged,
-                maxLines: null,
-                decoration: InputDecoration(
-                  hintText: 'Tulis pesan...',
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  onChanged: _onTextChanged,
+                  maxLines: null,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
                   ),
+                  decoration: InputDecoration(
+                    hintText: 'Tulis pesan...',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 14,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade100,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _send(),
                 ),
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _send(),
               ),
-            ),
-            const SizedBox(width: 8),
-            FloatingActionButton.small(
-              onPressed: _send,
-              child: const Icon(Icons.send),
-            ),
-          ],
+              const SizedBox(width: 8),
+              FloatingActionButton.small(
+                onPressed: _send,
+                child: const Icon(Icons.send),
+              ),
+            ],
+          ),
         ),
       ),
     );

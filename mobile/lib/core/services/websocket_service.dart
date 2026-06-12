@@ -13,7 +13,7 @@ import '../constants/app_constants.dart';
 /// Reverb connection config
 class _ReverbConfig {
   static const host   = 'localhost';
-  static const port   = 8080;
+  static const port   = 8081;
   static const appKey = 'p5xfspi3nsmwcmprm56c';
   static const scheme = 'ws';
 }

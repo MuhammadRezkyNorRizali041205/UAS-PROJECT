@@ -3,19 +3,18 @@
 
 namespace App\Models;
 
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class Conversation extends Model
 {
-    public $incrementing = false;
-    protected $keyType   = 'string';
+    use HasUuid;
 
     protected $fillable = [
-        'id', 'type', 'name', 'avatar', 'created_by', 'last_message_at',
+        'type', 'name', 'avatar', 'created_by', 'last_message_at',
     ];
 
     protected function casts(): array
@@ -23,15 +22,6 @@ class Conversation extends Model
         return [
             'last_message_at' => 'datetime',
         ];
-    }
-
-    protected static function booted(): void
-    {
-        static::creating(function (Conversation $conv) {
-            if (empty($conv->id)) {
-                $conv->id = (string) Str::uuid();
-            }
-        });
     }
 
     // ─── Relationships ────────────────────────────────────────────────────────
@@ -44,7 +34,8 @@ class Conversation extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'conversation_participants')
-            ->withPivot(['joined_at', 'last_read_at', 'is_admin'])
+            ->using(ConversationParticipant::class)
+            ->withPivot(['id', 'joined_at', 'last_read_at', 'is_admin'])
             ->withTimestamps();
     }
 

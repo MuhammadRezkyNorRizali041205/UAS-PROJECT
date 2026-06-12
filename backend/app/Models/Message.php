@@ -3,20 +3,17 @@
 
 namespace App\Models;
 
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 
 class Message extends Model
 {
-    use SoftDeletes;
-
-    public $incrementing = false;
-    protected $keyType   = 'string';
+    use HasUuid, SoftDeletes;
 
     protected $fillable = [
-        'id', 'conversation_id', 'sender_id', 'content',
+        'conversation_id', 'sender_id', 'content',
         'type', 'attachment_url', 'achievement_data', 'is_read', 'read_at',
     ];
 
@@ -27,15 +24,6 @@ class Message extends Model
             'is_read'          => 'boolean',
             'read_at'          => 'datetime',
         ];
-    }
-
-    protected static function booted(): void
-    {
-        static::creating(function (Message $msg) {
-            if (empty($msg->id)) {
-                $msg->id = (string) Str::uuid();
-            }
-        });
     }
 
     public function conversation(): BelongsTo

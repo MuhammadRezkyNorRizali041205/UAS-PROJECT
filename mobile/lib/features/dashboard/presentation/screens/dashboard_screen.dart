@@ -9,6 +9,8 @@ import '../../../../shared/theme/app_colors.dart';
 import '../../../../shared/theme/app_text_styles.dart';
 import '../../../../shared/widgets/error_state.dart';
 import '../../../notification/presentation/providers/notification_provider.dart';
+import '../../../feed/presentation/providers/feed_providers.dart';
+import '../../../feed/presentation/widgets/like_button.dart';
 import '../../domain/entities/dashboard_data.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/dashboard_skeleton.dart';
@@ -98,6 +100,19 @@ class _DashboardBody extends StatelessWidget {
         SliverToBoxAdapter(
           child: _DeadlinesSection(deadlines: data.upcomingDeadlines),
         ),
+
+        // ── Social Feed (3 recent posts) ─────────────────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+            child: _SectionHeader(
+              title: 'Feed Pencapaian',
+              icon: Icons.emoji_events_outlined,
+              onMore: () => context.push(AppRoutes.feed),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(child: _RecentFeedSection()),
 
         // ── Quick Access: Kalender & Presensi ────────────────────────────
         SliverToBoxAdapter(
@@ -428,6 +443,71 @@ class _DeadlinesSection extends StatelessWidget {
             )
             .toList(),
       ),
+    );
+  }
+}
+
+// ─── Recent Social Feed (3 posts) ────────────────────────────────────────────
+class _RecentFeedSection extends ConsumerWidget {
+  const _RecentFeedSection();
+
+  static const _typeEmoji = {
+    'task_completed':   '✅',
+    'streak_milestone': '🔥',
+    'badge_earned':     '🏅',
+    'level_up':         '⬆️',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(feedProvider);
+
+    return async.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (posts) {
+        if (posts.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: _EmptyChip(
+              icon: Icons.emoji_events_outlined,
+              label: 'Belum ada pencapaian yang dibagikan',
+            ),
+          );
+        }
+        final visible = posts.take(3).toList();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          child: Column(
+            children: visible.map((post) {
+              final emoji = _typeEmoji[post.type] ?? '🏆';
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: Text(emoji,
+                      style: const TextStyle(fontSize: 24)),
+                  title: Text(post.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600)),
+                  subtitle: Text(post.userName,
+                      style: const TextStyle(fontSize: 12)),
+                  trailing: LikeButton(
+                    isLiked:    post.isLiked,
+                    likesCount: post.likesCount,
+                    onTap: () =>
+                        ref.read(feedProvider.notifier).toggleLike(post.id),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
     );
   }
 }

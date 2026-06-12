@@ -3,33 +3,24 @@
 
 namespace App\Models;
 
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
 
 class FeedLike extends Model
 {
-    public $incrementing = false;
-    public $timestamps   = false;
-    protected $keyType   = 'string';
+    use HasUuid;
 
-    protected $fillable = ['id', 'feed_id', 'user_id'];
+    public $timestamps   = false;
 
     const CREATED_AT = 'created_at';
     const UPDATED_AT = null;
 
+    protected $fillable = ['feed_id', 'user_id'];
+
     protected function casts(): array
     {
         return ['created_at' => 'datetime'];
-    }
-
-    protected static function booted(): void
-    {
-        static::creating(function (FeedLike $like) {
-            if (empty($like->id)) {
-                $like->id = (string) Str::uuid();
-            }
-        });
     }
 
     public function feed(): BelongsTo

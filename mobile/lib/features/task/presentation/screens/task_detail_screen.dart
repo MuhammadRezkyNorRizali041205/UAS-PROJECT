@@ -11,6 +11,7 @@ import '../../../../shared/widgets/error_state.dart';
 import '../../../../shared/widgets/skeleton_loader.dart';
 import '../../domain/entities/task.dart';
 import '../providers/task_provider.dart';
+import '../../../feed/presentation/providers/feed_providers.dart';
 
 class TaskDetailScreen extends ConsumerWidget {
   final String id;
@@ -238,15 +239,19 @@ class _StatusToggleCard extends ConsumerWidget {
                 child: GestureDetector(
                   onTap: () async {
                     if (selected) return;
+                    final newStatus = s.$1;
                     final err = await ref
                         .read(taskListProvider.notifier)
-                        .updateStatus(task.id, s.$1);
-                    if (err != null && context.mounted) {
+                        .updateStatus(task.id, newStatus);
+                    if (!context.mounted) return;
+                    if (err != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                             content: Text(err),
                             backgroundColor: AppColors.danger),
                       );
+                    } else if (newStatus == 'completed') {
+                      _showShareFeedDialog(context, ref, task);
                     }
                   },
                   child: AnimatedContainer(
@@ -287,6 +292,47 @@ class _StatusToggleCard extends ConsumerWidget {
                 ),
               );
             }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showShareFeedDialog(
+      BuildContext context, WidgetRef ref, TaskEntity task) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('🎉 Tugas Selesai!'),
+        content: Text(
+          'Bagikan pencapaian "${task.title}" ke Social Feed?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tidak'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(feedProvider.notifier).createPost(
+                    type:        'task_completed',
+                    title:       'Tugas selesai: ${task.title}',
+                    description: task.description ?? '',
+                    visibility:  'public',
+                    achievementData: {
+                      'task_id':  task.id,
+                      'priority': task.priority,
+                    },
+                  );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('✅ Dibagikan ke Feed!')),
+                );
+              }
+            },
+            child: const Text('Bagikan'),
           ),
         ],
       ),

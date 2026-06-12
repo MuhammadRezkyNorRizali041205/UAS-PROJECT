@@ -45,6 +45,7 @@ import '../../features/chat/presentation/screens/create_group_screen.dart';
 import '../../features/feed/presentation/screens/social_feed_screen.dart';
 import '../../features/friend/presentation/screens/friend_list_screen.dart';
 
+import '../../features/chat/presentation/providers/chat_providers.dart';
 import '../../shared/theme/app_colors.dart';
 
 part 'app_router.g.dart';
@@ -440,6 +441,12 @@ class _AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width >= 900;
 
+    // Total unread messages across all conversations
+    final chatUnread = ref.watch(conversationListProvider).maybeWhen(
+          data: (convs) => convs.fold<int>(0, (sum, c) => sum + c.unreadCount),
+          orElse: () => 0,
+        );
+
     if (isDesktop) {
       return _DesktopShell(
         navigationShell: navigationShell,
@@ -450,7 +457,8 @@ class _AppShell extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(bottom: false, child: navigationShell),
       bottomNavigationBar: _MobileNavBar(
-        currentIndex: navigationShell.currentIndex,
+        currentIndex:   navigationShell.currentIndex,
+        chatUnreadCount: chatUnread,
         onTap: (i) => navigationShell.goBranch(
           i,
           initialLocation: i == navigationShell.currentIndex,
@@ -463,14 +471,19 @@ class _AppShell extends ConsumerWidget {
 
 class _MobileNavBar extends StatelessWidget {
   final int currentIndex;
+  final int chatUnreadCount;
   final ValueChanged<int> onTap;
   final List<({IconData icon, IconData active, String label})> destinations;
 
   const _MobileNavBar({
     required this.currentIndex,
+    required this.chatUnreadCount,
     required this.onTap,
     required this.destinations,
   });
+
+  // Chat tab is at index 3
+  static const _chatIndex = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -484,12 +497,33 @@ class _MobileNavBar extends StatelessWidget {
         child: NavigationBar(
           selectedIndex: currentIndex,
           onDestinationSelected: onTap,
-          destinations: destinations
-              .map((d) => NavigationDestination(
-                    icon: Icon(d.icon),
-                    selectedIcon: Icon(d.active),
-                    label: d.label,
-                  ))
+          destinations: destinations.indexed
+              .map((entry) {
+                final i = entry.$1;
+                final d = entry.$2;
+                final showBadge = i == _chatIndex && chatUnreadCount > 0;
+                final icon = showBadge
+                    ? Badge(
+                        label: Text(chatUnreadCount > 99
+                            ? '99+'
+                            : '$chatUnreadCount'),
+                        child: Icon(d.icon),
+                      )
+                    : Icon(d.icon);
+                final activeIcon = showBadge
+                    ? Badge(
+                        label: Text(chatUnreadCount > 99
+                            ? '99+'
+                            : '$chatUnreadCount'),
+                        child: Icon(d.active),
+                      )
+                    : Icon(d.active);
+                return NavigationDestination(
+                  icon:         icon,
+                  selectedIcon: activeIcon,
+                  label:        d.label,
+                );
+              })
               .toList(),
         ),
       ),

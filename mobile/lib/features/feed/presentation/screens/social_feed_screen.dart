@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../providers/feed_providers.dart';
+import '../widgets/like_button.dart';
 import '../../domain/entities/feed_post.dart';
 
 class SocialFeedScreen extends ConsumerWidget {
@@ -226,28 +227,10 @@ class _FeedCard extends StatelessWidget {
                   style: const TextStyle(color: Colors.black87)),
             ],
             const SizedBox(height: 12),
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: onLike,
-                  child: Row(
-                    children: [
-                      Icon(
-                        post.isLiked
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: post.isLiked ? Colors.red : Colors.grey,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${post.likesCount}',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            LikeButton(
+              isLiked:    post.isLiked,
+              likesCount: post.likesCount,
+              onTap:      onLike,
             ),
           ],
         ),

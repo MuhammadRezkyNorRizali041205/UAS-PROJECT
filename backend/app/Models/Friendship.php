@@ -3,27 +3,17 @@
 
 namespace App\Models;
 
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
 
 class Friendship extends Model
 {
-    public $incrementing = false;
-    protected $keyType   = 'string';
+    use HasUuid;
 
     protected $fillable = [
-        'id', 'requester_id', 'addressee_id', 'status',
+        'requester_id', 'addressee_id', 'status',
     ];
-
-    protected static function booted(): void
-    {
-        static::creating(function (Friendship $f) {
-            if (empty($f->id)) {
-                $f->id = (string) Str::uuid();
-            }
-        });
-    }
 
     public function requester(): BelongsTo
     {

@@ -3,18 +3,17 @@
 
 namespace App\Models;
 
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class SocialFeed extends Model
 {
-    public $incrementing = false;
-    protected $keyType   = 'string';
+    use HasUuid;
 
     protected $fillable = [
-        'id', 'user_id', 'type', 'title', 'description',
+        'user_id', 'type', 'title', 'description',
         'achievement_data', 'visibility', 'likes_count',
     ];
 
@@ -24,15 +23,6 @@ class SocialFeed extends Model
             'achievement_data' => 'array',
             'likes_count'      => 'integer',
         ];
-    }
-
-    protected static function booted(): void
-    {
-        static::creating(function (SocialFeed $feed) {
-            if (empty($feed->id)) {
-                $feed->id = (string) Str::uuid();
-            }
-        });
     }
 
     public function user(): BelongsTo
