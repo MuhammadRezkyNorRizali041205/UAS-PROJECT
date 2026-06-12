@@ -37,4 +37,5 @@ class ApiEndpoints {
   // Profile
   static const String profile = '/profile';
   static const String profileAvatar = '/profile/avatar';
+  static const String profileNotifications = '/profile/notifications';
 }

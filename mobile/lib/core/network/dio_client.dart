@@ -1,5 +1,5 @@
-
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -17,7 +17,7 @@ class DioClient {
   DioClient() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: AppConstants.baseUrl,
+        baseUrl: kIsWeb ? 'http://localhost:9000/api/v1' : AppConstants.baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
@@ -114,6 +114,12 @@ class DioClient {
         );
 
       case DioExceptionType.connectionError:
+        if (kIsWeb &&
+            (e.message?.toLowerCase().contains('xmlhttprequest') ?? false)) {
+          return const NetworkException(
+            'Request diblokir browser (CORS). Pastikan backend mengizinkan origin http://localhost:* dan server berjalan di port 9000.',
+          );
+        }
         return const NetworkException('Tidak dapat terhubung ke server.');
 
       case DioExceptionType.badResponse:
@@ -150,7 +156,8 @@ class DioClient {
 /// Interceptor to inject Bearer token on every request.
 class _AuthInterceptor extends Interceptor {
   static const _storage = FlutterSecureStorage(
-    webOptions: WebOptions(dbName: 'smart_campus_db', publicKey: 'SmartCampusKey16'),
+    webOptions:
+        WebOptions(dbName: 'smart_campus_db', publicKey: 'smart_campus_key'),
   );
 
   const _AuthInterceptor();

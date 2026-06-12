@@ -57,7 +57,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     try {
       final token = await _storage.read(key: AppConstants.tokenKey);
       if (!mounted) return;
-      context.go(token != null && token.isNotEmpty ? '/' : '/login');
+      context.go(token != null && token.isNotEmpty ? '/dashboard' : '/login');
     } catch (_) {
       if (!mounted) return;
       context.go('/login');
@@ -179,8 +179,8 @@ class _AnimatedDotsState extends State<_AnimatedDots>
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (i) {
             final t = (_ctrl.value + i / 3.0) % 1.0;
-            final opacity = (t < 0.5 ? t * 2.0 : (1.0 - t) * 2.0)
-                .clamp(0.15, 1.0);
+            final opacity =
+                (t < 0.5 ? t * 2.0 : (1.0 - t) * 2.0).clamp(0.15, 1.0);
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 5),
               width: 9,

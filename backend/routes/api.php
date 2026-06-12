@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Auth\MeController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\AttendanceController;
+use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ScheduleController;
 use App\Http\Controllers\Api\V1\TaskController;
 use Illuminate\Support\Facades\Route;
@@ -69,8 +70,9 @@ Route::prefix('v1')->group(function () {
         Route::get('analytics/summary',   [AnalyticsController::class, 'summary']);
 
         // Profile
-        // Route::get('profile',          [ProfileController::class, 'show']);
-        // Route::put('profile',          [ProfileController::class, 'update']);
-        // Route::post('profile/avatar',  [ProfileController::class, 'uploadAvatar']);
+        Route::get('profile', [ProfileController::class, 'show']);
+        Route::put('profile', [ProfileController::class, 'update']);
+        Route::post('profile/avatar', [ProfileController::class, 'updateAvatar']);
+        Route::patch('profile/notifications', [ProfileController::class, 'updateNotifications']);
     });
 });

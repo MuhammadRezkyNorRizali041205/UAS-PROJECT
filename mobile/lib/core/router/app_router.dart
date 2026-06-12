@@ -41,32 +41,32 @@ part 'app_router.g.dart';
 class AppRoutes {
   AppRoutes._();
 
-  static const splash          = '/splash';
-  static const login           = '/login';
-  static const register        = '/register';
-  static const forgotPassword  = '/forgot-password';
-  static const dashboard       = '/';
-  static const analytics       = '/analytics';
-  static const attendance      = '/attendance';
-  static const attendanceScan  = '/attendance/scan';
+  static const splash = '/splash';
+  static const login = '/login';
+  static const register = '/register';
+  static const forgotPassword = '/forgot-password';
+  static const dashboard = '/dashboard';
+  static const analytics = '/analytics';
+  static const attendance = '/attendance';
+  static const attendanceScan = '/attendance/scan';
   static const attendanceGenerate = '/attendance/generate';
-  static const attendanceHistory  = '/attendance/history';
-  static const announcement    = '/announcement';
-  static const notification    = '/notification';
-  static const schedule        = '/schedule';
-  static const scheduleCreate  = '/schedule/create';
-  static const task            = '/task';
-  static const taskCreate      = '/task/create';
-  static const calendar        = '/calendar';
-  static const profile         = '/profile';
-  static const profileEdit     = '/profile/edit';
+  static const attendanceHistory = '/attendance/history';
+  static const announcement = '/announcement';
+  static const notification = '/notification';
+  static const schedule = '/schedule';
+  static const scheduleCreate = '/schedule/create';
+  static const task = '/task';
+  static const taskCreate = '/task/create';
+  static const calendar = '/calendar';
+  static const profile = '/profile';
+  static const profileEdit = '/profile/edit';
 
   static String scheduleDetail(String id) => '/schedule/$id';
-  static String scheduleEdit(String id)   => '/schedule/$id/edit';
-  static String taskDetail(String id)     => '/task/$id';
-  static String taskEdit(String id)       => '/task/$id/edit';
+  static String scheduleEdit(String id) => '/schedule/$id/edit';
+  static String taskDetail(String id) => '/task/$id';
+  static String taskEdit(String id) => '/task/$id/edit';
   static String announcementDetail(String id) => '/announcement/$id';
-  static String attendanceSession(String id)  => '/attendance/session/$id';
+  static String attendanceSession(String id) => '/attendance/session/$id';
 }
 
 // ─── Router provider ──────────────────────────────────────────────────────────
@@ -95,10 +95,10 @@ GoRouter appRouter(Ref ref) {
       final path = state.matchedLocation;
       final authState = notifier.authState;
 
-      final isSplash     = path == AppRoutes.splash;
-      final isAuthRoute  = path == AppRoutes.login ||
-                           path == AppRoutes.register ||
-                           path == AppRoutes.forgotPassword;
+      final isSplash = path == AppRoutes.splash;
+      final isAuthRoute = path == AppRoutes.login ||
+          path == AppRoutes.register ||
+          path == AppRoutes.forgotPassword;
 
       // Still checking session — don't interfere with navigation.
       // Splash owns initial routing; blocking here causes bounce-back loop.
@@ -324,7 +324,13 @@ class _RouterRefreshNotifier extends ChangeNotifier {
 
 // ─── Shell widget ─────────────────────────────────────────────────────────────
 
-const _rootPaths = {'/', '/schedule', '/task', '/calendar', '/profile'};
+const _rootPaths = {
+  '/dashboard',
+  '/schedule',
+  '/task',
+  '/calendar',
+  '/profile'
+};
 
 class _AppShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
@@ -332,11 +338,31 @@ class _AppShell extends ConsumerWidget {
   const _AppShell({required this.navigationShell});
 
   static const _destinations = [
-    (icon: Icons.dashboard_outlined,     active: Icons.dashboard_rounded,     label: 'Beranda'),
-    (icon: Icons.calendar_today_outlined, active: Icons.calendar_today_rounded, label: 'Jadwal'),
-    (icon: Icons.task_alt_outlined,      active: Icons.task_alt_rounded,      label: 'Tugas'),
-    (icon: Icons.calendar_month_outlined, active: Icons.calendar_month_rounded, label: 'Kalender'),
-    (icon: Icons.person_outline_rounded, active: Icons.person_rounded,        label: 'Profil'),
+    (
+      icon: Icons.dashboard_outlined,
+      active: Icons.dashboard_rounded,
+      label: 'Beranda'
+    ),
+    (
+      icon: Icons.calendar_today_outlined,
+      active: Icons.calendar_today_rounded,
+      label: 'Jadwal'
+    ),
+    (
+      icon: Icons.task_alt_outlined,
+      active: Icons.task_alt_rounded,
+      label: 'Tugas'
+    ),
+    (
+      icon: Icons.calendar_month_outlined,
+      active: Icons.calendar_month_rounded,
+      label: 'Kalender'
+    ),
+    (
+      icon: Icons.person_outline_rounded,
+      active: Icons.person_rounded,
+      label: 'Profil'
+    ),
   ];
 
   @override

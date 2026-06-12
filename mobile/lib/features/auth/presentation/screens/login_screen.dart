@@ -57,7 +57,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // Navigate on success
     ref.listen(authProvider, (_, next) {
       if (next is AuthAuthenticated) {
-        context.go('/');
+        context.go('/dashboard');
       }
     });
 

@@ -15,11 +15,12 @@ part 'auth_repository_impl.g.dart';
 
 @riverpod
 AuthRepository authRepository(Ref ref) => AuthRepositoryImpl(
-  ref.watch(authRemoteDatasourceProvider),
-  const FlutterSecureStorage(
-    webOptions: WebOptions(dbName: 'smart_campus_db', publicKey: 'SmartCampusKey16'),
-  ),
-);
+      ref.watch(authRemoteDatasourceProvider),
+      const FlutterSecureStorage(
+        webOptions: WebOptions(
+            dbName: 'smart_campus_db', publicKey: 'smart_campus_key'),
+      ),
+    );
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource _datasource;

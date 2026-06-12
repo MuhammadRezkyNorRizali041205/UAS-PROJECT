@@ -52,7 +52,7 @@ class Auth extends _$Auth {
   static const _storage = FlutterSecureStorage(
     webOptions: WebOptions(
       dbName: 'smart_campus_db',
-      publicKey: 'SmartCampusKey16',
+      publicKey: 'smart_campus_key',
     ),
   );
 
