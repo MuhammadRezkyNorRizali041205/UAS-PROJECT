@@ -55,6 +55,42 @@ class AppColors {
     }
   }
 
+  // ─── Role ─────────────────────────────────────────────────────────────
+  static const Color roleStudent      = Color(0xFF58A6FF);
+  static const Color roleLecturer     = Color(0xFFD29922);
+  static const Color roleOrganization = Color(0xFF3FB950);
+  static const Color roleAdmin        = Color(0xFFF85149);
+
+  static Color roleColor(String role) {
+    switch (role) {
+      case 'student':      return roleStudent;
+      case 'lecturer':     return roleLecturer;
+      case 'organization': return roleOrganization;
+      case 'admin':        return roleAdmin;
+      default:             return primary;
+    }
+  }
+
+  static String roleLabel(String role) {
+    switch (role) {
+      case 'student':      return 'Mahasiswa';
+      case 'lecturer':     return 'Dosen';
+      case 'organization': return 'Organisasi';
+      case 'admin':        return 'Admin';
+      default:             return role;
+    }
+  }
+
+  // ─── Grade ────────────────────────────────────────────────────────────
+  static Color gradeColor(String grade) {
+    switch (grade) {
+      case 'A':  return success;
+      case 'B':  return primary;
+      case 'C':  return warning;
+      default:   return danger;
+    }
+  }
+
   // ─── Priority ─────────────────────────────────────────────────────────
   static const Color priorityLow = Color(0xFF10B981);
   static const Color priorityMedium = Color(0xFF6366F1);

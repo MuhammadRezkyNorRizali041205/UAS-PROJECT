@@ -16,7 +16,18 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ScheduleController;
 use App\Http\Controllers\Api\V1\SocialFeedController;
+use App\Http\Controllers\Api\V1\StudentClassController;
 use App\Http\Controllers\Api\V1\TaskController;
+
+use App\Http\Controllers\Api\V1\Lecturer\LecturerDashboardController;
+use App\Http\Controllers\Api\V1\Lecturer\LecturerClassController;
+use App\Http\Controllers\Api\V1\Lecturer\LecturerTaskController;
+use App\Http\Controllers\Api\V1\Lecturer\LecturerStudentController;
+
+use App\Http\Controllers\Api\V1\Organization\OrganizationDashboardController;
+use App\Http\Controllers\Api\V1\Organization\OrganizationEventController;
+use App\Http\Controllers\Api\V1\Organization\OrganizationMemberController;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -130,6 +141,53 @@ Route::prefix('v1')->group(function () {
             Route::post('request',     [FriendController::class, 'sendRequest']);
             Route::post('{id}/accept', [FriendController::class, 'accept']);
             Route::delete('{id}',      [FriendController::class, 'destroy']);
+        });
+
+        // ─── Student Class (role: student) ────────────────────────────────────
+        Route::middleware('role:student')->prefix('student')->group(function () {
+            Route::get('classes',                        [StudentClassController::class, 'myClasses']);
+            Route::get('classes/{classId}',              [StudentClassController::class, 'classDetail']);
+            Route::post('class-tasks/{taskId}/submit',   [StudentClassController::class, 'submitTask']);
+        });
+
+        // ─── Lecturer (role: lecturer) ────────────────────────────────────────
+        Route::middleware('role:lecturer')->prefix('lecturer')->group(function () {
+            Route::get('dashboard', LecturerDashboardController::class);
+
+            Route::get('classes',                                [LecturerClassController::class, 'index']);
+            Route::post('classes',                               [LecturerClassController::class, 'store']);
+            Route::get('classes/{id}',                           [LecturerClassController::class, 'show']);
+            Route::put('classes/{id}',                           [LecturerClassController::class, 'update']);
+            Route::delete('classes/{id}',                        [LecturerClassController::class, 'destroy']);
+            Route::post('classes/{id}/enroll',                   [LecturerClassController::class, 'enrollStudent']);
+            Route::delete('classes/{id}/students/{studentId}',   [LecturerClassController::class, 'removeStudent']);
+
+            Route::get('classes/{classId}/tasks',                [LecturerTaskController::class, 'index']);
+            Route::post('classes/{classId}/tasks',               [LecturerTaskController::class, 'store']);
+            Route::get('tasks/{id}',                             [LecturerTaskController::class, 'show']);
+            Route::get('tasks/{id}/submissions',                 [LecturerTaskController::class, 'submissions']);
+            Route::patch('submissions/{id}/grade',               [LecturerTaskController::class, 'grade']);
+
+            Route::get('classes/{classId}/students',             [LecturerStudentController::class, 'index']);
+            Route::get('classes/{classId}/students/{studentId}/progress', [LecturerStudentController::class, 'progress']);
+        });
+
+        // ─── Organization (role: organization) ───────────────────────────────
+        Route::middleware('role:organization')->prefix('org')->group(function () {
+            Route::get('dashboard', OrganizationDashboardController::class);
+
+            Route::get('events',                         [OrganizationEventController::class, 'index']);
+            Route::post('events',                        [OrganizationEventController::class, 'store']);
+            Route::get('events/{id}',                    [OrganizationEventController::class, 'show']);
+            Route::put('events/{id}',                    [OrganizationEventController::class, 'update']);
+            Route::patch('events/{id}/publish',          [OrganizationEventController::class, 'publish']);
+            Route::delete('events/{id}',                 [OrganizationEventController::class, 'destroy']);
+            Route::get('events/{id}/registrations',      [OrganizationEventController::class, 'registrations']);
+
+            Route::get('members',                        [OrganizationMemberController::class, 'index']);
+            Route::post('members',                       [OrganizationMemberController::class, 'store']);
+            Route::patch('members/{id}/role',            [OrganizationMemberController::class, 'updateRole']);
+            Route::delete('members/{id}',                [OrganizationMemberController::class, 'destroy']);
         });
     });
 });

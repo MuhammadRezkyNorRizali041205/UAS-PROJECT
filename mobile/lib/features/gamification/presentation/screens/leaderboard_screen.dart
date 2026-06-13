@@ -261,8 +261,8 @@ class _MyRankBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text('📍 Posisimu',
-              style: const TextStyle(
+          const Text('📍 Posisimu',
+              style: TextStyle(
                   color: AppColors.textSecondary, fontSize: 12)),
           const Spacer(),
           Text('Rank #${myRank.rank}',

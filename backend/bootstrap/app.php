@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
+        $middleware->alias([
+            'role' => \App\Http\Middleware\EnsureRole::class,
+        ]);
         // Mobile app uses token-based auth via Sanctum — no stateful API needed
         // Rate limiters are registered in AppServiceProvider
     })

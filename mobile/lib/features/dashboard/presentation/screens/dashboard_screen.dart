@@ -112,12 +112,12 @@ class _DashboardBody extends StatelessWidget {
             ),
           ),
         ),
-        SliverToBoxAdapter(child: _RecentFeedSection()),
+        const SliverToBoxAdapter(child: _RecentFeedSection()),
 
         // ── Quick Access: Kalender & Presensi ────────────────────────────
-        SliverToBoxAdapter(
+        const SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+            padding: EdgeInsets.fromLTRB(20, 28, 20, 0),
             child: _SectionHeader(
               title: 'Akses Cepat',
               icon: Icons.apps_rounded,
@@ -381,8 +381,8 @@ class _TodaySchedulesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (schedules.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
         child: _EmptyChip(
           icon: Icons.check_circle_outline_rounded,
           label: 'Tidak ada jadwal hari ini',
@@ -416,8 +416,8 @@ class _DeadlinesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (deadlines.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
         child: _EmptyChip(
           icon: Icons.celebration_outlined,
           label: 'Tidak ada deadline dalam 7 hari ke depan',
@@ -470,8 +470,8 @@ class _RecentFeedSection extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (posts) {
         if (posts.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          return const Padding(
+            padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
             child: _EmptyChip(
               icon: Icons.emoji_events_outlined,
               label: 'Belum ada pencapaian yang dibagikan',

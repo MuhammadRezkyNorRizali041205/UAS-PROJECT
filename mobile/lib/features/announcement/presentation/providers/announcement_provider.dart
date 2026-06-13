@@ -1,6 +1,5 @@
 // lib/features/announcement/presentation/providers/announcement_provider.dart
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/models/announcement_model.dart';
 import '../../data/repositories/announcement_repository_impl.dart';

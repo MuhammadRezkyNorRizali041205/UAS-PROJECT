@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             AchievementSeeder::class,
             DailyQuestSeeder::class,
             AnnouncementSeeder::class,
+            RoleSeeder::class,
         ]);
     }
 }

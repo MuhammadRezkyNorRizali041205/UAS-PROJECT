@@ -282,7 +282,7 @@ class _AnnouncementCard extends StatelessWidget {
                 ),
                 if (announcement.isUrgent) ...[
                   const SizedBox(width: 6),
-                  _Badge(label: '🚨 Urgent', color: AppColors.danger),
+                  const _Badge(label: '🚨 Urgent', color: AppColors.danger),
                 ],
               ],
             ),
@@ -307,7 +307,7 @@ class _AnnouncementCard extends StatelessWidget {
             // Footer
             Row(
               children: [
-                Icon(Icons.person_outline_rounded,
+                const Icon(Icons.person_outline_rounded,
                     size: 13, color: AppColors.textMuted),
                 const SizedBox(width: 4),
                 Expanded(

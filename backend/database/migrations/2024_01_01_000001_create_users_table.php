@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('role', ['student', 'lecturer', 'admin', 'org_admin'])->default('student');
+            $table->enum('role', ['student', 'lecturer', 'admin', 'org_admin', 'organization'])->default('student');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('fcm_token', 512)->nullable();
             $table->boolean('is_active')->default(true);

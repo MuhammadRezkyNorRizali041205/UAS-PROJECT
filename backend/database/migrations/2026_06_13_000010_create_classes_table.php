@@ -1,0 +1,36 @@
+<?php
+// database/migrations/2026_06_13_000010_create_classes_table.php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('classes', function (Blueprint $table) {
+            $table->uuid('id')->primary()->default(DB::raw('(UUID())'));
+            $table->string('name');
+            $table->string('course_name');
+            $table->string('course_code');
+            $table->foreignId('lecturer_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedTinyInteger('semester');
+            $table->string('academic_year');
+            $table->text('description')->nullable();
+            $table->unsignedSmallInteger('max_students')->default(40);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->index('lecturer_id');
+            $table->index('course_code');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('classes');
+    }
+};

@@ -107,7 +107,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         children: [
           // ─── Calendar widget ─────────────────────────────────────────
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surface,
               border: Border(bottom: BorderSide(color: AppColors.border)),
             ),

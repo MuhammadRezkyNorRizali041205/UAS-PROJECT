@@ -45,6 +45,25 @@ import '../../features/chat/presentation/screens/create_group_screen.dart';
 import '../../features/feed/presentation/screens/social_feed_screen.dart';
 import '../../features/friend/presentation/screens/friend_list_screen.dart';
 
+// Lecturer screens
+import '../../features/lecturer/presentation/screens/lecturer_dashboard_screen.dart';
+import '../../features/lecturer/presentation/screens/lecturer_class_list_screen.dart';
+import '../../features/lecturer/presentation/screens/lecturer_class_detail_screen.dart';
+import '../../features/lecturer/presentation/screens/lecturer_task_submissions_screen.dart';
+import '../../features/lecturer/presentation/screens/lecturer_grade_submission_screen.dart';
+import '../../features/lecturer/presentation/screens/lecturer_student_progress_screen.dart';
+
+// Organization screens
+import '../../features/organization/presentation/screens/org_dashboard_screen.dart';
+import '../../features/organization/presentation/screens/org_event_list_screen.dart';
+import '../../features/organization/presentation/screens/org_event_form_screen.dart';
+import '../../features/organization/presentation/screens/org_member_list_screen.dart';
+
+// Student class screens
+import '../../features/student_class/presentation/screens/student_class_list_screen.dart';
+import '../../features/student_class/presentation/screens/student_class_detail_screen.dart';
+import '../../features/student_class/presentation/screens/student_task_submit_screen.dart';
+
 import '../../features/chat/presentation/providers/chat_providers.dart';
 import '../../shared/theme/app_colors.dart';
 
@@ -59,14 +78,14 @@ class AppRoutes {
   static const register       = '/register';
   static const forgotPassword = '/forgot-password';
 
-  // ── Bottom nav roots ───────────────────────────────────────────────────────
+  // ── Student bottom nav roots ───────────────────────────────────────────────
   static const dashboard  = '/dashboard';
   static const schedule   = '/schedule';
   static const task       = '/task';
   static const chat       = '/chat';
   static const profile    = '/profile';
 
-  // ── Full-screen feature routes (no bottom nav) ─────────────────────────────
+  // ── Full-screen feature routes ─────────────────────────────────────────────
   static const calendar   = '/calendar';
   static const attendance = '/attendance';
   static const feed       = '/feed';
@@ -77,43 +96,55 @@ class AppRoutes {
   static const announcement  = '/dashboard/announcement';
   static const notification  = '/dashboard/notification';
 
-  // ── Attendance sub-routes (now top-level) ──────────────────────────────────
   static const attendanceScan     = '/attendance/scan';
   static const attendanceGenerate = '/attendance/generate';
   static const attendanceHistory  = '/attendance/history';
 
-  // ── Schedule sub-routes ────────────────────────────────────────────────────
   static const scheduleCreate = '/schedule/create';
+  static const taskCreate     = '/task/create';
 
-  // ── Task sub-routes ────────────────────────────────────────────────────────
-  static const taskCreate = '/task/create';
+  static const profileEdit              = '/profile/edit';
+  static const gamificationQuests       = '/profile/gamification/quests';
+  static const gamificationAchievements = '/profile/gamification/achievements';
+  static const gamificationLeaderboard  = '/profile/gamification/leaderboard';
 
-  // ── Profile sub-routes ─────────────────────────────────────────────────────
-  static const profileEdit             = '/profile/edit';
-  static const gamificationQuests      = '/profile/gamification/quests';
-  static const gamificationAchievements= '/profile/gamification/achievements';
-  static const gamificationLeaderboard = '/profile/gamification/leaderboard';
-
-  // ── Chat sub-routes ────────────────────────────────────────────────────────
   static const chatNew      = '/chat/new';
   static const chatNewGroup = '/chat/new-group';
   static String chatConversation(String id) => '/chat/$id';
 
-  // ── Dynamic routes ─────────────────────────────────────────────────────────
-  static String scheduleDetail(String id)      => '/schedule/$id';
-  static String scheduleEdit(String id)        => '/schedule/$id/edit';
-  static String taskDetail(String id)          => '/task/$id';
-  static String taskEdit(String id)            => '/task/$id/edit';
-  static String announcementDetail(String id)  => '/dashboard/announcement/$id';
+  static String scheduleDetail(String id)     => '/schedule/$id';
+  static String scheduleEdit(String id)       => '/schedule/$id/edit';
+  static String taskDetail(String id)         => '/task/$id';
+  static String taskEdit(String id)           => '/task/$id/edit';
+  static String announcementDetail(String id) => '/dashboard/announcement/$id';
+
+  // ── Student class routes ───────────────────────────────────────────────────
+  static const studentClasses = '/student/classes';
+  static String studentClassDetail(String id) => '/student/classes/$id';
+  static String studentTaskSubmit(String taskId, String classId) =>
+      '/student/class-tasks/$taskId/submit?classId=$classId';
+
+  // ── Lecturer routes ────────────────────────────────────────────────────────
+  static const lecturerDashboard = '/lecturer/dashboard';
+  static const lecturerClasses   = '/lecturer/classes';
+  static String lecturerClassDetail(String id)  => '/lecturer/classes/$id';
+  static String lecturerTaskSubmissions(String id) => '/lecturer/tasks/$id/submissions';
+  static String lecturerGrade(String submissionId) => '/lecturer/submissions/$submissionId/grade';
+  static String lecturerStudentProgress(String classId, String studentId) =>
+      '/lecturer/classes/$classId/students/$studentId/progress';
+
+  // ── Organization routes ────────────────────────────────────────────────────
+  static const orgDashboard = '/org/dashboard';
+  static const orgEvents    = '/org/events';
+  static const orgEventsCreate = '/org/events/create';
+  static String orgEventDetail(String id) => '/org/events/$id';
+  static const orgMembers   = '/org/members';
+
+  // ── Admin routes ───────────────────────────────────────────────────────────
+  static const adminDashboard = '/admin/dashboard';
 }
 
 // ─── Router provider ──────────────────────────────────────────────────────────
-//
-// KEY: Do NOT use ref.watch(authProvider) here — that recreates the entire
-// GoRouter on every auth-state change, resetting navigation to initialLocation.
-// Instead, use a ChangeNotifier with refreshListenable so GoRouter re-evaluates
-// the redirect without rebuilding the router instance.
-//
 @riverpod
 GoRouter appRouter(Ref ref) {
   final notifier = _RouterRefreshNotifier();
@@ -139,7 +170,9 @@ GoRouter appRouter(Ref ref) {
       if (authState is AuthInitial || authState is AuthLoading) return null;
 
       if (authState is AuthAuthenticated) {
-        if (isSplash || isAuthRoute) return AppRoutes.dashboard;
+        if (isSplash || isAuthRoute) {
+          return _homeForRole(authState.user.role);
+        }
         return null;
       }
 
@@ -148,243 +181,239 @@ GoRouter appRouter(Ref ref) {
     },
     routes: [
       // ─── Splash & Auth ────────────────────────────────────────────────
-      GoRoute(
-        path: AppRoutes.splash,
-        name: 'splash',
-        builder: (_, __) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.login,
-        name: 'login',
-        builder: (_, __) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.register,
-        name: 'register',
-        builder: (_, __) => const RegisterScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.forgotPassword,
-        name: 'forgot-password',
-        builder: (_, __) => const ForgotPasswordScreen(),
-      ),
+      GoRoute(path: AppRoutes.splash,         builder: (_, __) => const SplashScreen()),
+      GoRoute(path: AppRoutes.login,          builder: (_, __) => const LoginScreen()),
+      GoRoute(path: AppRoutes.register,       builder: (_, __) => const RegisterScreen()),
+      GoRoute(path: AppRoutes.forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
 
-      // ─── Full-screen routes (pushed over shell, no bottom nav) ───────
+      // ─── Full-screen routes (no bottom nav) ───────────────────────────
       GoRoute(
         path: AppRoutes.calendar,
-        name: 'calendar',
         builder: (_, __) => const CalendarScreen(),
       ),
       GoRoute(
         path: AppRoutes.attendance,
-        name: 'attendance',
         builder: (_, __) => const AttendanceScreen(),
         routes: [
+          GoRoute(path: 'scan',     builder: (_, __) => const QrScannerScreen()),
+          GoRoute(path: 'generate', builder: (_, __) => const QrGeneratorScreen()),
+          GoRoute(path: 'history',  builder: (_, __) => const AttendanceHistoryScreen()),
+        ],
+      ),
+      GoRoute(path: AppRoutes.feed,    builder: (_, __) => const SocialFeedScreen()),
+      GoRoute(path: AppRoutes.friends, builder: (_, __) => const FriendListScreen()),
+
+      // ─── Student class routes ─────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.studentClasses,
+        builder: (_, __) => const StudentClassListScreen(),
+        routes: [
           GoRoute(
-            path: 'scan',
-            name: 'attendance-scan',
-            builder: (_, __) => const QrScannerScreen(),
-          ),
-          GoRoute(
-            path: 'generate',
-            name: 'attendance-generate',
-            builder: (_, __) => const QrGeneratorScreen(),
-          ),
-          GoRoute(
-            path: 'history',
-            name: 'attendance-history',
-            builder: (_, __) => const AttendanceHistoryScreen(),
+            path: ':classId',
+            builder: (_, state) => StudentClassDetailScreen(classId: state.pathParameters['classId']!),
           ),
         ],
       ),
       GoRoute(
-        path: AppRoutes.feed,
-        name: 'feed',
-        builder: (_, __) => const SocialFeedScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.friends,
-        name: 'friends',
-        builder: (_, __) => const FriendListScreen(),
+        path: '/student/class-tasks/:taskId/submit',
+        builder: (_, state) => StudentTaskSubmitScreen(
+          taskId:  state.pathParameters['taskId']!,
+          classId: state.uri.queryParameters['classId'] ?? '',
+        ),
       ),
 
-      // ─── Main App Shell (5 branches) ──────────────────────────────────
+      // ─── Lecturer routes ──────────────────────────────────────────────
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => _LecturerShell(shell: shell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.lecturerDashboard,
+              builder: (_, __) => const LecturerDashboardScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.lecturerClasses,
+              builder: (_, __) => const LecturerClassListScreen(),
+              routes: [
+                GoRoute(
+                  path: ':classId',
+                  builder: (_, state) => LecturerClassDetailScreen(classId: state.pathParameters['classId']!),
+                  routes: [
+                    GoRoute(
+                      path: 'students/:studentId/progress',
+                      builder: (_, state) => LecturerStudentProgressScreen(
+                        classId:   state.pathParameters['classId']!,
+                        studentId: state.pathParameters['studentId']!,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/lecturer/profile',
+              builder: (_, __) => const ProfileScreen(),
+              routes: [
+                GoRoute(path: 'edit', builder: (_, __) => const EditProfileScreen()),
+              ],
+            ),
+          ]),
+        ],
+      ),
+      // Full-screen lecturer routes (no bottom nav)
+      GoRoute(
+        path: '/lecturer/tasks/:taskId/submissions',
+        builder: (_, state) => LecturerTaskSubmissionsScreen(taskId: state.pathParameters['taskId']!),
+      ),
+      GoRoute(
+        path: '/lecturer/submissions/:submissionId/grade',
+        builder: (_, state) => LecturerGradeSubmissionScreen(submissionId: state.pathParameters['submissionId']!),
+      ),
+
+      // ─── Organization routes ──────────────────────────────────────────
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => _OrgShell(shell: shell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.orgDashboard, builder: (_, __) => const OrgDashboardScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.orgEvents,
+              builder: (_, __) => const OrgEventListScreen(),
+              routes: [
+                GoRoute(path: 'create', builder: (_, __) => const OrgEventFormScreen()),
+                GoRoute(path: ':eventId', builder: (_, state) => const OrgEventListScreen()),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.orgMembers, builder: (_, __) => const OrgMemberListScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/org/profile',
+              builder: (_, __) => const ProfileScreen(),
+              routes: [
+                GoRoute(path: 'edit', builder: (_, __) => const EditProfileScreen()),
+              ],
+            ),
+          ]),
+        ],
+      ),
+
+      // ─── Admin routes ─────────────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.adminDashboard,
+        builder: (_, __) => const _AdminDashboardScreen(),
+      ),
+
+      // ─── Main Student Shell (5 branches) ──────────────────────────────
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             _AppShell(navigationShell: navigationShell),
         branches: [
-
-          // ── Branch 0: Dashboard ──────────────────────────────────────
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.dashboard,
-                name: 'dashboard',
-                builder: (_, __) => const DashboardScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'analytics',
-                    name: 'analytics',
-                    builder: (_, __) => const AnalyticsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'announcement',
-                    name: 'announcement',
-                    builder: (_, __) => const AnnouncementFeedScreen(),
-                    routes: [
-                      GoRoute(
-                        path: ':announcementId',
-                        name: 'announcement-detail',
-                        builder: (_, state) => AnnouncementDetailScreen(
-                          id: state.pathParameters['announcementId']!,
-                        ),
-                      ),
-                    ],
-                  ),
-                  GoRoute(
-                    path: 'notification',
-                    name: 'notification',
-                    builder: (_, __) => const NotificationScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          // ── Branch 1: Schedule ────────────────────────────────────────
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.schedule,
-                name: 'schedule',
-                builder: (_, __) => const ScheduleListScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'create',
-                    name: 'schedule-create',
-                    builder: (_, __) => const ScheduleFormScreen(),
-                  ),
-                  GoRoute(
-                    path: ':scheduleId',
-                    name: 'schedule-detail',
-                    builder: (_, state) => ScheduleDetailScreen(
-                      id: state.pathParameters['scheduleId']!,
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.dashboard,
+              builder: (_, __) => const DashboardScreen(),
+              routes: [
+                GoRoute(path: 'analytics',    builder: (_, __) => const AnalyticsScreen()),
+                GoRoute(
+                  path: 'announcement',
+                  builder: (_, __) => const AnnouncementFeedScreen(),
+                  routes: [
+                    GoRoute(
+                      path: ':announcementId',
+                      builder: (_, state) => AnnouncementDetailScreen(id: state.pathParameters['announcementId']!),
                     ),
-                    routes: [
-                      GoRoute(
-                        path: 'edit',
-                        name: 'schedule-edit',
-                        builder: (_, state) => ScheduleFormScreen(
-                          id: state.pathParameters['scheduleId'],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          // ── Branch 2: Task ────────────────────────────────────────────
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.task,
-                name: 'task',
-                builder: (_, __) => const TaskListScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'create',
-                    name: 'task-create',
-                    builder: (_, __) => const TaskFormScreen(),
-                  ),
-                  GoRoute(
-                    path: ':taskId',
-                    name: 'task-detail',
-                    builder: (_, state) => TaskDetailScreen(
-                      id: state.pathParameters['taskId']!,
+                  ],
+                ),
+                GoRoute(path: 'notification', builder: (_, __) => const NotificationScreen()),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.schedule,
+              builder: (_, __) => const ScheduleListScreen(),
+              routes: [
+                GoRoute(path: 'create', builder: (_, __) => const ScheduleFormScreen()),
+                GoRoute(
+                  path: ':scheduleId',
+                  builder: (_, state) => ScheduleDetailScreen(id: state.pathParameters['scheduleId']!),
+                  routes: [
+                    GoRoute(
+                      path: 'edit',
+                      builder: (_, state) => ScheduleFormScreen(id: state.pathParameters['scheduleId']),
                     ),
-                    routes: [
-                      GoRoute(
-                        path: 'edit',
-                        name: 'task-edit',
-                        builder: (_, state) => TaskFormScreen(
-                          id: state.pathParameters['taskId'],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          // ── Branch 3: Chat ────────────────────────────────────────────
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.chat,
-                name: 'chat',
-                builder: (_, __) => const ConversationListScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'new',
-                    name: 'chat-new',
-                    builder: (_, __) => const SearchUserScreen(),
-                  ),
-                  GoRoute(
-                    path: 'new-group',
-                    name: 'chat-new-group',
-                    builder: (_, __) => const CreateGroupScreen(),
-                  ),
-                  GoRoute(
-                    path: ':conversationId',
-                    name: 'chat-conversation',
-                    builder: (_, state) => ChatScreen(
-                      conversationId: state.pathParameters['conversationId']!,
+                  ],
+                ),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.task,
+              builder: (_, __) => const TaskListScreen(),
+              routes: [
+                GoRoute(path: 'create', builder: (_, __) => const TaskFormScreen()),
+                GoRoute(
+                  path: ':taskId',
+                  builder: (_, state) => TaskDetailScreen(id: state.pathParameters['taskId']!),
+                  routes: [
+                    GoRoute(
+                      path: 'edit',
+                      builder: (_, state) => TaskFormScreen(id: state.pathParameters['taskId']),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          // ── Branch 4: Profile ─────────────────────────────────────────
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.profile,
-                name: 'profile',
-                builder: (_, __) => const ProfileScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'edit',
-                    name: 'profile-edit',
-                    builder: (_, __) => const EditProfileScreen(),
-                  ),
-                  GoRoute(
-                    path: 'gamification/quests',
-                    name: 'gamification-quests',
-                    builder: (_, __) => const DailyQuestScreen(),
-                  ),
-                  GoRoute(
-                    path: 'gamification/achievements',
-                    name: 'gamification-achievements',
-                    builder: (_, __) => const AchievementScreen(),
-                  ),
-                  GoRoute(
-                    path: 'gamification/leaderboard',
-                    name: 'gamification-leaderboard',
-                    builder: (_, __) => const LeaderboardScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                  ],
+                ),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.chat,
+              builder: (_, __) => const ConversationListScreen(),
+              routes: [
+                GoRoute(path: 'new',       builder: (_, __) => const SearchUserScreen()),
+                GoRoute(path: 'new-group', builder: (_, __) => const CreateGroupScreen()),
+                GoRoute(
+                  path: ':conversationId',
+                  builder: (_, state) => ChatScreen(conversationId: state.pathParameters['conversationId']!),
+                ),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.profile,
+              builder: (_, __) => const ProfileScreen(),
+              routes: [
+                GoRoute(path: 'edit',                     builder: (_, __) => const EditProfileScreen()),
+                GoRoute(path: 'gamification/quests',      builder: (_, __) => const DailyQuestScreen()),
+                GoRoute(path: 'gamification/achievements',builder: (_, __) => const AchievementScreen()),
+                GoRoute(path: 'gamification/leaderboard', builder: (_, __) => const LeaderboardScreen()),
+              ],
+            ),
+          ]),
         ],
       ),
     ],
   );
+}
+
+String _homeForRole(String? role) {
+  switch (role) {
+    case 'lecturer':     return AppRoutes.lecturerDashboard;
+    case 'organization': return AppRoutes.orgDashboard;
+    case 'admin':        return AppRoutes.adminDashboard;
+    default:             return AppRoutes.dashboard;
+  }
 }
 
 // ─── Router refresh notifier ──────────────────────────────────────────────────
@@ -402,91 +431,33 @@ class _RouterRefreshNotifier extends ChangeNotifier {
   }
 }
 
-// ─── Shell widget ─────────────────────────────────────────────────────────────
-
+// ─── Student Shell ────────────────────────────────────────────────────────────
 class _AppShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
   const _AppShell({required this.navigationShell});
 
-  // 5 tabs — Beranda, Jadwal, Tugas, Chat, Profil
   static const _destinations = [
-    (
-      icon: Icons.dashboard_outlined,
-      active: Icons.dashboard_rounded,
-      label: 'Beranda'
-    ),
-    (
-      icon: Icons.calendar_today_outlined,
-      active: Icons.calendar_today_rounded,
-      label: 'Jadwal'
-    ),
-    (
-      icon: Icons.task_alt_outlined,
-      active: Icons.task_alt_rounded,
-      label: 'Tugas'
-    ),
-    (
-      icon: Icons.chat_bubble_outline_rounded,
-      active: Icons.chat_bubble_rounded,
-      label: 'Chat'
-    ),
-    (
-      icon: Icons.person_outline_rounded,
-      active: Icons.person_rounded,
-      label: 'Profil'
-    ),
+    (icon: Icons.dashboard_outlined,        active: Icons.dashboard_rounded,        label: 'Beranda'),
+    (icon: Icons.calendar_today_outlined,   active: Icons.calendar_today_rounded,   label: 'Jadwal'),
+    (icon: Icons.task_alt_outlined,         active: Icons.task_alt_rounded,         label: 'Tugas'),
+    (icon: Icons.chat_bubble_outline_rounded, active: Icons.chat_bubble_rounded,    label: 'Chat'),
+    (icon: Icons.person_outline_rounded,    active: Icons.person_rounded,           label: 'Profil'),
   ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
-
-    // Total unread messages across all conversations
     final chatUnread = ref.watch(conversationListProvider).maybeWhen(
-          data: (convs) => convs.fold<int>(0, (sum, c) => sum + c.unreadCount),
-          orElse: () => 0,
-        );
-
-    if (isDesktop) {
-      return _DesktopShell(
-        navigationShell: navigationShell,
-        destinations: _destinations,
-      );
-    }
+      data: (convs) => convs.fold<int>(0, (sum, c) => sum + c.unreadCount),
+      orElse: () => 0,
+    );
 
     return Scaffold(
       body: SafeArea(bottom: false, child: navigationShell),
-      bottomNavigationBar: _MobileNavBar(
-        currentIndex:   navigationShell.currentIndex,
-        chatUnreadCount: chatUnread,
-        onTap: (i) => navigationShell.goBranch(
-          i,
-          initialLocation: i == navigationShell.currentIndex,
-        ),
-        destinations: _destinations,
-      ),
+      bottomNavigationBar: _buildNavBar(context, chatUnread),
     );
   }
-}
 
-class _MobileNavBar extends StatelessWidget {
-  final int currentIndex;
-  final int chatUnreadCount;
-  final ValueChanged<int> onTap;
-  final List<({IconData icon, IconData active, String label})> destinations;
-
-  const _MobileNavBar({
-    required this.currentIndex,
-    required this.chatUnreadCount,
-    required this.onTap,
-    required this.destinations,
-  });
-
-  // Chat tab is at index 3
-  static const _chatIndex = 3;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildNavBar(BuildContext context, int chatUnread) {
     return Container(
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: AppColors.border)),
@@ -495,81 +466,113 @@ class _MobileNavBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: NavigationBar(
-          selectedIndex: currentIndex,
-          onDestinationSelected: onTap,
-          destinations: destinations.indexed
-              .map((entry) {
-                final i = entry.$1;
-                final d = entry.$2;
-                final showBadge = i == _chatIndex && chatUnreadCount > 0;
-                final icon = showBadge
-                    ? Badge(
-                        label: Text(chatUnreadCount > 99
-                            ? '99+'
-                            : '$chatUnreadCount'),
-                        child: Icon(d.icon),
-                      )
-                    : Icon(d.icon);
-                final activeIcon = showBadge
-                    ? Badge(
-                        label: Text(chatUnreadCount > 99
-                            ? '99+'
-                            : '$chatUnreadCount'),
-                        child: Icon(d.active),
-                      )
-                    : Icon(d.active);
-                return NavigationDestination(
-                  icon:         icon,
-                  selectedIcon: activeIcon,
-                  label:        d.label,
-                );
-              })
-              .toList(),
+          selectedIndex: navigationShell.currentIndex,
+          onDestinationSelected: (i) => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
+          destinations: _destinations.indexed.map((entry) {
+            final i = entry.$1;
+            final d = entry.$2;
+            final showBadge = i == 3 && chatUnread > 0;
+            return NavigationDestination(
+              icon: showBadge ? Badge(label: Text(chatUnread > 99 ? '99+' : '$chatUnread'), child: Icon(d.icon)) : Icon(d.icon),
+              selectedIcon: showBadge ? Badge(label: Text(chatUnread > 99 ? '99+' : '$chatUnread'), child: Icon(d.active)) : Icon(d.active),
+              label: d.label,
+            );
+          }).toList(),
         ),
       ),
     );
   }
 }
 
-class _DesktopShell extends StatelessWidget {
-  final StatefulNavigationShell navigationShell;
-  final List<({IconData icon, IconData active, String label})> destinations;
+// ─── Lecturer Shell ───────────────────────────────────────────────────────────
+class _LecturerShell extends StatelessWidget {
+  const _LecturerShell({required this.shell});
+  final StatefulNavigationShell shell;
 
-  const _DesktopShell({
-    required this.navigationShell,
-    required this.destinations,
-  });
+  static const _destinations = [
+    (icon: Icons.dashboard_outlined,     active: Icons.dashboard_rounded, label: 'Beranda'),
+    (icon: Icons.school_outlined,        active: Icons.school_rounded,    label: 'Kelas'),
+    (icon: Icons.person_outline_rounded, active: Icons.person_rounded,    label: 'Profil'),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Row(
+      body: SafeArea(bottom: false, child: shell),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.border)),
+          color: AppColors.surface,
+        ),
+        child: SafeArea(
+          top: false,
+          child: NavigationBar(
+            selectedIndex: shell.currentIndex,
+            onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+            destinations: _destinations.map((d) => NavigationDestination(
+              icon: Icon(d.icon), selectedIcon: Icon(d.active), label: d.label,
+            )).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Organization Shell ───────────────────────────────────────────────────────
+class _OrgShell extends StatelessWidget {
+  const _OrgShell({required this.shell});
+  final StatefulNavigationShell shell;
+
+  static const _destinations = [
+    (icon: Icons.dashboard_outlined,          active: Icons.dashboard_rounded,         label: 'Beranda'),
+    (icon: Icons.event_outlined,              active: Icons.event_rounded,             label: 'Event'),
+    (icon: Icons.people_outline_rounded,      active: Icons.people_rounded,            label: 'Anggota'),
+    (icon: Icons.person_outline_rounded,      active: Icons.person_rounded,            label: 'Profil'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(bottom: false, child: shell),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.border)),
+          color: AppColors.surface,
+        ),
+        child: SafeArea(
+          top: false,
+          child: NavigationBar(
+            selectedIndex: shell.currentIndex,
+            onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+            destinations: _destinations.map((d) => NavigationDestination(
+              icon: Icon(d.icon), selectedIcon: Icon(d.active), label: d.label,
+            )).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Admin Dashboard (simple) ─────────────────────────────────────────────────
+class _AdminDashboardScreen extends StatelessWidget {
+  const _AdminDashboardScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(backgroundColor: AppColors.surface, title: const Text('Admin Dashboard')),
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              decoration: const BoxDecoration(
-                border: Border(right: BorderSide(color: AppColors.border)),
-                color: AppColors.surface,
-              ),
-              child: NavigationRail(
-                selectedIndex: navigationShell.currentIndex,
-                onDestinationSelected: (i) => navigationShell.goBranch(
-                  i,
-                  initialLocation: i == navigationShell.currentIndex,
-                ),
-                labelType: NavigationRailLabelType.all,
-                groupAlignment: -1.0,
-                minWidth: 72,
-                destinations: destinations
-                    .map((d) => NavigationRailDestination(
-                          icon: Icon(d.icon),
-                          selectedIcon: Icon(d.active),
-                          label: Text(d.label),
-                        ))
-                    .toList(),
-              ),
-            ),
-            Expanded(child: navigationShell),
+            Icon(Icons.admin_panel_settings_rounded, color: AppColors.roleAdmin, size: 72),
+            SizedBox(height: 16),
+            Text('Admin Panel', style: TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            Text('Fitur admin tersedia via web dashboard', style: TextStyle(color: AppColors.textMuted)),
           ],
         ),
       ),
