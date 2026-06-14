@@ -9,6 +9,9 @@ use App\Models\ClassEnrollment;
 use App\Models\ClassRoom;
 use App\Models\ClassTask;
 use App\Models\ClassTaskSubmission;
+use App\Models\Organization;
+use App\Models\OrganizationEvent;
+use App\Models\OrganizationMember;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -50,6 +53,66 @@ class LecturerSeeder extends Seeder
             'major'   => 'Organisasi Mahasiswa',
             'bio'     => 'Badan Eksekutif Mahasiswa Politeknik Negeri Banjarmasin',
         ]);
+
+        // ── Organization record ───────────────────────────────────────────────
+        $orgRecord = Organization::updateOrCreate(
+            ['leader_id' => $org->id],
+            [
+                'name'         => 'BEM Politeknik Negeri Banjarmasin',
+                'description'  => 'Badan Eksekutif Mahasiswa (BEM) Politeknik Negeri Banjarmasin adalah organisasi kemahasiswaan tertinggi di Poliban yang bertugas sebagai wadah aspirasi mahasiswa.',
+                'category'     => 'bem',
+                'is_verified'  => true,
+                'member_count' => 0,
+            ]
+        );
+
+        // Leader as member
+        OrganizationMember::updateOrCreate(
+            ['organization_id' => $orgRecord->id, 'user_id' => $org->id],
+            ['role' => 'leader', 'joined_at' => now()->subYear(), 'is_active' => true]
+        );
+
+        // Events
+        $eventData = [
+            [
+                'title'                 => 'Seminar Nasional Teknologi Informasi 2026',
+                'description'           => 'Seminar nasional dengan tema "Transformasi Digital menuju Indonesia Emas 2045". Menghadirkan pembicara dari industri teknologi terkemuka.',
+                'event_date'            => now()->addDays(14)->setTime(8, 0),
+                'end_date'              => now()->addDays(14)->setTime(17, 0),
+                'location'             => 'Aula Utama Poliban, Banjarmasin',
+                'max_participants'      => 300,
+                'registration_deadline' => now()->addDays(10)->setTime(23, 59),
+                'status'               => 'published',
+            ],
+            [
+                'title'                 => 'Lomba Karya Tulis Ilmiah 2026',
+                'description'           => 'Kompetisi karya tulis ilmiah tingkat mahasiswa se-Kalimantan Selatan. Tema: "Inovasi Teknologi untuk Keberlanjutan".',
+                'event_date'            => now()->addDays(30)->setTime(8, 0),
+                'end_date'              => now()->addDays(31)->setTime(17, 0),
+                'location'             => 'Gedung Serbaguna Poliban',
+                'max_participants'      => 150,
+                'registration_deadline' => now()->addDays(25)->setTime(23, 59),
+                'status'               => 'published',
+            ],
+            [
+                'title'                 => 'Workshop UI/UX Design',
+                'description'           => 'Workshop praktis desain antarmuka pengguna menggunakan Figma. Cocok untuk mahasiswa yang ingin berkarir di bidang desain produk digital.',
+                'event_date'            => now()->subDays(7)->setTime(9, 0),
+                'end_date'              => now()->subDays(7)->setTime(16, 0),
+                'location'             => 'Lab Komputer Gedung C Poliban',
+                'max_participants'      => 50,
+                'registration_deadline' => now()->subDays(10)->setTime(23, 59),
+                'status'               => 'completed',
+            ],
+        ];
+
+        OrganizationEvent::where('organization_id', $orgRecord->id)->forceDelete();
+        foreach ($eventData as $ed) {
+            OrganizationEvent::create(array_merge($ed, [
+                'organization_id' => $orgRecord->id,
+                'created_by'      => $org->id,
+            ]));
+        }
 
         // ── Students (5 students for the classes) ────────────────────────────
         $studentData = [
@@ -140,10 +203,11 @@ class LecturerSeeder extends Seeder
 
         $this->command->info('LecturerSeeder selesai:');
         $this->command->info("  Dosen   : dosen@poliban.ac.id / password123");
-        $this->command->info("  Org     : bem@poliban.ac.id / password123");
+        $this->command->info("  Org     : bem@poliban.ac.id / password123 → {$orgRecord->name}");
         $this->command->info("  Mhs 1-5 : mahasiswa1-5@poliban.ac.id / password123");
         $this->command->info("  Kelas 1 : {$class1->course_name} ({$class1->id})");
         $this->command->info("  Kelas 2 : {$class2->course_name} ({$class2->id})");
+        $this->command->info("  Events  : 3 event (2 published, 1 completed)");
     }
 
     private function seedClass(

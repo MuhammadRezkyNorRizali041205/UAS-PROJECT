@@ -47,7 +47,7 @@ class OrganizationEventController extends Controller
         ]);
 
         $event = $this->service->createEvent($org, $request->user(), $data);
-        return $this->success(data: $event, message: 'Event berhasil dibuat.', statusCode: 201);
+        return $this->success(data: $event, message: 'Event berhasil dibuat.', code: 201);
     }
 
     public function show(Request $request, string $id): JsonResponse

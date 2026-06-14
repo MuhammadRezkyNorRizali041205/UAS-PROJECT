@@ -60,6 +60,7 @@ import '../../features/lecturer/presentation/screens/lecturer_qr_display_screen.
 import '../../features/organization/presentation/screens/org_dashboard_screen.dart';
 import '../../features/organization/presentation/screens/org_event_list_screen.dart';
 import '../../features/organization/presentation/screens/org_event_form_screen.dart';
+import '../../features/organization/presentation/screens/org_event_detail_screen.dart';
 import '../../features/organization/presentation/screens/org_member_list_screen.dart';
 
 // Student class screens
@@ -331,7 +332,8 @@ GoRouter appRouter(Ref ref) {
                 GoRoute(path: 'create', builder: (_, __) => const OrgEventFormScreen()),
                 GoRoute(
                     path: ':eventId',
-                    builder: (_, state) => const OrgEventListScreen()),
+                    builder: (_, state) => OrgEventDetailScreen(
+                        eventId: state.pathParameters['eventId']!)),
               ],
             ),
           ]),

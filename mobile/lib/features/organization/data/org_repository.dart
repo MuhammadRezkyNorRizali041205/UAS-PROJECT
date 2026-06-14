@@ -23,8 +23,17 @@ class OrgRepository {
         fromJson: (json) => json['data'] as Map<String, dynamic>);
   }
 
+  Future<Map<String, dynamic>> getEventDetail(String eventId) async {
+    return await _client.get<Map<String, dynamic>>('/org/events/$eventId',
+        fromJson: (json) => json['data'] as Map<String, dynamic>);
+  }
+
   Future<void> publishEvent(String eventId) async {
     await _client.patch<dynamic>('/org/events/$eventId/publish');
+  }
+
+  Future<void> updateEvent(String eventId, Map<String, dynamic> data) async {
+    await _client.put<dynamic>('/org/events/$eventId', data: data);
   }
 
   Future<void> deleteEvent(String eventId) async {
