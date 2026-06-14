@@ -164,3 +164,80 @@ final class LecturerClassTasksFamily extends $Family
   @override
   String toString() => r'lecturerClassTasksProvider';
 }
+
+@ProviderFor(lecturerStudentsWithRisk)
+final lecturerStudentsWithRiskProvider = LecturerStudentsWithRiskFamily._();
+
+final class LecturerStudentsWithRiskProvider extends $FunctionalProvider<
+        AsyncValue<List<dynamic>>, List<dynamic>, FutureOr<List<dynamic>>>
+    with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
+  LecturerStudentsWithRiskProvider._(
+      {required LecturerStudentsWithRiskFamily super.from,
+      required String super.argument})
+      : super(
+          retry: null,
+          name: r'lecturerStudentsWithRiskProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$lecturerStudentsWithRiskHash();
+
+  @override
+  String toString() {
+    return r'lecturerStudentsWithRiskProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<dynamic>> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<dynamic>> create(Ref ref) {
+    final argument = this.argument as String;
+    return lecturerStudentsWithRisk(
+      ref,
+      argument,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is LecturerStudentsWithRiskProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$lecturerStudentsWithRiskHash() =>
+    r'19ed19c3392c6ff5bb77cd8c8f15ea54caa20de1';
+
+final class LecturerStudentsWithRiskFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<dynamic>>, String> {
+  LecturerStudentsWithRiskFamily._()
+      : super(
+          retry: null,
+          name: r'lecturerStudentsWithRiskProvider',
+          dependencies: null,
+          $allTransitiveDependencies: null,
+          isAutoDispose: true,
+        );
+
+  LecturerStudentsWithRiskProvider call(
+    String classId,
+  ) =>
+      LecturerStudentsWithRiskProvider._(argument: classId, from: this);
+
+  @override
+  String toString() => r'lecturerStudentsWithRiskProvider';
+}

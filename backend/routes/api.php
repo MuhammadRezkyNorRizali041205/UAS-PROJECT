@@ -23,6 +23,8 @@ use App\Http\Controllers\Api\V1\Lecturer\LecturerDashboardController;
 use App\Http\Controllers\Api\V1\Lecturer\LecturerClassController;
 use App\Http\Controllers\Api\V1\Lecturer\LecturerTaskController;
 use App\Http\Controllers\Api\V1\Lecturer\LecturerStudentController;
+use App\Http\Controllers\Api\V1\Lecturer\LecturerAttendanceController;
+use App\Http\Controllers\Api\V1\Lecturer\LecturerGradingController;
 
 use App\Http\Controllers\Api\V1\Organization\OrganizationDashboardController;
 use App\Http\Controllers\Api\V1\Organization\OrganizationEventController;
@@ -162,14 +164,27 @@ Route::prefix('v1')->group(function () {
             Route::post('classes/{id}/enroll',                   [LecturerClassController::class, 'enrollStudent']);
             Route::delete('classes/{id}/students/{studentId}',   [LecturerClassController::class, 'removeStudent']);
 
+            // Tasks
             Route::get('classes/{classId}/tasks',                [LecturerTaskController::class, 'index']);
             Route::post('classes/{classId}/tasks',               [LecturerTaskController::class, 'store']);
             Route::get('tasks/{id}',                             [LecturerTaskController::class, 'show']);
+            Route::put('tasks/{id}',                             [LecturerTaskController::class, 'update']);
+            Route::delete('tasks/{id}',                          [LecturerTaskController::class, 'destroy']);
             Route::get('tasks/{id}/submissions',                 [LecturerTaskController::class, 'submissions']);
             Route::patch('submissions/{id}/grade',               [LecturerTaskController::class, 'grade']);
 
+            // Students
             Route::get('classes/{classId}/students',             [LecturerStudentController::class, 'index']);
             Route::get('classes/{classId}/students/{studentId}/progress', [LecturerStudentController::class, 'progress']);
+
+            // Attendance
+            Route::get('classes/{classId}/attendance',           [LecturerAttendanceController::class, 'index']);
+            Route::post('classes/{classId}/attendance',          [LecturerAttendanceController::class, 'store']);
+            Route::get('attendance/{sessionId}',                 [LecturerAttendanceController::class, 'show']);
+            Route::patch('attendance/{sessionId}/close',         [LecturerAttendanceController::class, 'close']);
+
+            // Grading (all pending)
+            Route::get('grading',                                [LecturerGradingController::class, 'index']);
         });
 
         // ─── Organization (role: organization) ───────────────────────────────

@@ -141,7 +141,7 @@ class _ClassListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pending = cls['pending_submissions_count'] as int? ?? 0;
+    final pending = cls['pending_submissions'] as int? ?? 0;
     return Card(
       color: AppColors.surface,
       margin: const EdgeInsets.only(bottom: 10),

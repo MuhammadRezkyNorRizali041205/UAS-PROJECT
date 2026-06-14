@@ -20,7 +20,16 @@ class UserEntity {
   bool get isAdmin => role == 'admin' || role == 'org_admin';
   bool get isLecturer => role == 'lecturer';
   bool get isStudent => role == 'student';
+  bool get isOrganization => role == 'organization' || role == 'org_admin';
   bool get isVerified => emailVerifiedAt != null;
+
+  String get dashboardRoute => switch (role) {
+    'lecturer'     => '/lecturer/dashboard',
+    'organization' => '/org/dashboard',
+    'org_admin'    => '/org/dashboard',
+    'admin'        => '/admin/dashboard',
+    _              => '/dashboard',
+  };
 }
 
 class ProfileEntity {

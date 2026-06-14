@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/app_router.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/widgets/app_widgets.dart';
 import '../providers/auth_provider.dart';
@@ -22,9 +21,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String _selectedRole = 'student';
 
   static const _roles = [
-    ('student', 'Mahasiswa'),
-    ('lecturer', 'Dosen'),
-    ('org_admin', 'Organisasi'),
+    ('student',      'Mahasiswa'),
+    ('lecturer',     'Dosen'),
+    ('organization', 'Organisasi'),
   ];
 
   @override
@@ -70,7 +69,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final errorMsg = authState is AuthError ? (authState).message : null;
 
     ref.listen(authProvider, (_, next) {
-      if (next is AuthAuthenticated) context.go(AppRoutes.dashboard);
+      if (next is AuthAuthenticated) context.go(next.user.dashboardRoute);
     });
 
     return Scaffold(

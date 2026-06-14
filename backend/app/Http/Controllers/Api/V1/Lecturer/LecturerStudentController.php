@@ -19,15 +19,15 @@ class LecturerStudentController extends Controller
 
     public function index(Request $request, string $classId): JsonResponse
     {
-        $class = ClassRoom::where('lecturer_id', $request->user()->id)->findOrFail($classId);
-        $detail = $this->service->getClassDetail($class);
-        return $this->success(data: $detail['students']);
+        $class    = ClassRoom::where('lecturer_id', $request->user()->id)->findOrFail($classId);
+        $students = $this->service->getStudentsWithRisk($class);
+        return $this->success(data: $students);
     }
 
     public function progress(Request $request, string $classId, string $studentId): JsonResponse
     {
-        $class   = ClassRoom::where('lecturer_id', $request->user()->id)->findOrFail($classId);
-        $student = User::findOrFail($studentId);
+        $class    = ClassRoom::where('lecturer_id', $request->user()->id)->findOrFail($classId);
+        $student  = User::with('profile')->findOrFail($studentId);
         $progress = $this->service->getStudentProgress($class, $student);
         return $this->success(data: $progress);
     }

@@ -14,7 +14,7 @@ class AttendanceSession extends Model
     const UPDATED_AT = null;
 
     protected $fillable = [
-        'creator_id', 'course_name', 'session_code', 'location',
+        'creator_id', 'class_id', 'course_name', 'session_code', 'location',
         'latitude', 'longitude', 'radius_m', 'starts_at', 'ends_at', 'is_active',
     ];
 

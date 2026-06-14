@@ -7,9 +7,8 @@ class LecturerRepository {
   final DioClient _client;
 
   Future<Map<String, dynamic>> getDashboard() async {
-    final data = await _client.get<Map<String, dynamic>>('/lecturer/dashboard',
+    return await _client.get<Map<String, dynamic>>('/lecturer/dashboard',
         fromJson: (json) => json['data'] as Map<String, dynamic>);
-    return data;
   }
 
   Future<List<dynamic>> getClasses() async {
@@ -24,6 +23,12 @@ class LecturerRepository {
 
   Future<Map<String, dynamic>> createClass(Map<String, dynamic> data) async {
     return await _client.post<Map<String, dynamic>>('/lecturer/classes',
+        data: data,
+        fromJson: (json) => json['data'] as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> updateClass(String classId, Map<String, dynamic> data) async {
+    return await _client.put<Map<String, dynamic>>('/lecturer/classes/$classId',
         data: data,
         fromJson: (json) => json['data'] as Map<String, dynamic>);
   }
@@ -44,11 +49,12 @@ class LecturerRepository {
         fromJson: (json) => json['data'] as Map<String, dynamic>);
   }
 
-  Future<List<dynamic>> getSubmissions(String taskId, {String? filter}) async {
-    return await _client.get<List<dynamic>>(
+  // Returns {submissions: List, summary: Map}
+  Future<Map<String, dynamic>> getSubmissions(String taskId, {String? filter}) async {
+    return await _client.get<Map<String, dynamic>>(
         '/lecturer/tasks/$taskId/submissions',
         queryParameters: filter != null ? {'filter': filter} : null,
-        fromJson: (json) => json['data'] as List<dynamic>);
+        fromJson: (json) => json['data'] as Map<String, dynamic>);
   }
 
   Future<void> gradeSubmission(String submissionId, int score, String? feedback) async {
@@ -56,6 +62,38 @@ class LecturerRepository {
       'score': score,
       if (feedback != null && feedback.isNotEmpty) 'feedback': feedback,
     });
+  }
+
+  // Returns {submissions: List, total: int}
+  Future<Map<String, dynamic>> getAllPendingGrading() async {
+    return await _client.get<Map<String, dynamic>>('/lecturer/grading',
+        fromJson: (json) => json['data'] as Map<String, dynamic>);
+  }
+
+  Future<List<dynamic>> getAttendanceSessions(String classId) async {
+    return await _client.get<List<dynamic>>('/lecturer/classes/$classId/attendance',
+        fromJson: (json) => json['data'] as List<dynamic>);
+  }
+
+  // Returns full detail {session, present, absent, present_count, total_students}
+  Future<Map<String, dynamic>> createAttendanceSession(String classId, Map<String, dynamic> data) async {
+    return await _client.post<Map<String, dynamic>>('/lecturer/classes/$classId/attendance',
+        data: data,
+        fromJson: (json) => json['data'] as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> getAttendanceDetail(int sessionId) async {
+    return await _client.get<Map<String, dynamic>>('/lecturer/attendance/$sessionId',
+        fromJson: (json) => json['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> closeAttendanceSession(int sessionId) async {
+    await _client.patch<dynamic>('/lecturer/attendance/$sessionId/close');
+  }
+
+  Future<List<dynamic>> getStudentsWithRisk(String classId) async {
+    return await _client.get<List<dynamic>>('/lecturer/classes/$classId/students',
+        fromJson: (json) => json['data'] as List<dynamic>);
   }
 
   Future<Map<String, dynamic>> getStudentProgress(String classId, String studentId) async {

@@ -52,6 +52,9 @@ import '../../features/lecturer/presentation/screens/lecturer_class_detail_scree
 import '../../features/lecturer/presentation/screens/lecturer_task_submissions_screen.dart';
 import '../../features/lecturer/presentation/screens/lecturer_grade_submission_screen.dart';
 import '../../features/lecturer/presentation/screens/lecturer_student_progress_screen.dart';
+import '../../features/lecturer/presentation/screens/lecturer_grading_screen.dart';
+import '../../features/lecturer/presentation/screens/lecturer_attendance_screen.dart';
+import '../../features/lecturer/presentation/screens/lecturer_qr_display_screen.dart';
 
 // Organization screens
 import '../../features/organization/presentation/screens/org_dashboard_screen.dart';
@@ -127,18 +130,22 @@ class AppRoutes {
   // ── Lecturer routes ────────────────────────────────────────────────────────
   static const lecturerDashboard = '/lecturer/dashboard';
   static const lecturerClasses   = '/lecturer/classes';
-  static String lecturerClassDetail(String id)  => '/lecturer/classes/$id';
+  static const lecturerGrading   = '/lecturer/grading';
+  static String lecturerClassDetail(String id)    => '/lecturer/classes/$id';
   static String lecturerTaskSubmissions(String id) => '/lecturer/tasks/$id/submissions';
   static String lecturerGrade(String submissionId) => '/lecturer/submissions/$submissionId/grade';
   static String lecturerStudentProgress(String classId, String studentId) =>
       '/lecturer/classes/$classId/students/$studentId/progress';
+  static String lecturerAttendanceMgmt(String classId) =>
+      '/lecturer/classes/$classId/attendance-mgmt';
+  static String lecturerQr(int sessionId) => '/lecturer/attendance/$sessionId/qr';
 
   // ── Organization routes ────────────────────────────────────────────────────
-  static const orgDashboard = '/org/dashboard';
-  static const orgEvents    = '/org/events';
+  static const orgDashboard    = '/org/dashboard';
+  static const orgEvents       = '/org/events';
   static const orgEventsCreate = '/org/events/create';
   static String orgEventDetail(String id) => '/org/events/$id';
-  static const orgMembers   = '/org/members';
+  static const orgMembers      = '/org/members';
 
   // ── Admin routes ───────────────────────────────────────────────────────────
   static const adminDashboard = '/admin/dashboard';
@@ -170,9 +177,18 @@ GoRouter appRouter(Ref ref) {
       if (authState is AuthInitial || authState is AuthLoading) return null;
 
       if (authState is AuthAuthenticated) {
-        if (isSplash || isAuthRoute) {
-          return _homeForRole(authState.user.role);
-        }
+        final role = authState.user.role;
+
+        if (isSplash || isAuthRoute) return _homeForRole(role);
+
+        final isStudentHome  = path == '/dashboard' || path.startsWith('/dashboard/');
+        final isLecturerHome = path.startsWith('/lecturer/');
+        final isOrgHome      = path.startsWith('/org/');
+
+        if (isStudentHome  && role != 'student')                             return _homeForRole(role);
+        if (isLecturerHome && role != 'lecturer')                            return _homeForRole(role);
+        if (isOrgHome      && role != 'organization' && role != 'org_admin') return _homeForRole(role);
+
         return null;
       }
 
@@ -210,7 +226,8 @@ GoRouter appRouter(Ref ref) {
         routes: [
           GoRoute(
             path: ':classId',
-            builder: (_, state) => StudentClassDetailScreen(classId: state.pathParameters['classId']!),
+            builder: (_, state) =>
+                StudentClassDetailScreen(classId: state.pathParameters['classId']!),
           ),
         ],
       ),
@@ -222,16 +239,18 @@ GoRouter appRouter(Ref ref) {
         ),
       ),
 
-      // ─── Lecturer routes ──────────────────────────────────────────────
+      // ─── Lecturer Shell (4 tabs) ──────────────────────────────────────
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => _LecturerShell(shell: shell),
         branches: [
+          // Branch 0 – Beranda
           StatefulShellBranch(routes: [
             GoRoute(
               path: AppRoutes.lecturerDashboard,
               builder: (_, __) => const LecturerDashboardScreen(),
             ),
           ]),
+          // Branch 1 – Kelas
           StatefulShellBranch(routes: [
             GoRoute(
               path: AppRoutes.lecturerClasses,
@@ -239,7 +258,8 @@ GoRouter appRouter(Ref ref) {
               routes: [
                 GoRoute(
                   path: ':classId',
-                  builder: (_, state) => LecturerClassDetailScreen(classId: state.pathParameters['classId']!),
+                  builder: (_, state) => LecturerClassDetailScreen(
+                      classId: state.pathParameters['classId']!),
                   routes: [
                     GoRoute(
                       path: 'students/:studentId/progress',
@@ -253,6 +273,14 @@ GoRouter appRouter(Ref ref) {
               ],
             ),
           ]),
+          // Branch 2 – Penilaian
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.lecturerGrading,
+              builder: (_, __) => const LecturerGradingScreen(),
+            ),
+          ]),
+          // Branch 3 – Profil
           StatefulShellBranch(routes: [
             GoRoute(
               path: '/lecturer/profile',
@@ -264,22 +292,36 @@ GoRouter appRouter(Ref ref) {
           ]),
         ],
       ),
-      // Full-screen lecturer routes (no bottom nav)
+
+      // ─── Lecturer full-screen routes (outside shell) ──────────────────
       GoRoute(
         path: '/lecturer/tasks/:taskId/submissions',
-        builder: (_, state) => LecturerTaskSubmissionsScreen(taskId: state.pathParameters['taskId']!),
+        builder: (_, state) => LecturerTaskSubmissionsScreen(
+            taskId: state.pathParameters['taskId']!),
       ),
       GoRoute(
         path: '/lecturer/submissions/:submissionId/grade',
-        builder: (_, state) => LecturerGradeSubmissionScreen(submissionId: state.pathParameters['submissionId']!),
+        builder: (_, state) => LecturerGradeSubmissionScreen(
+            submissionId: state.pathParameters['submissionId']!),
+      ),
+      GoRoute(
+        path: '/lecturer/classes/:classId/attendance-mgmt',
+        builder: (_, state) => LecturerAttendanceScreen(
+            classId: state.pathParameters['classId']!),
+      ),
+      GoRoute(
+        path: '/lecturer/attendance/:sessionId/qr',
+        builder: (_, state) => LecturerQrDisplayScreen(
+            sessionId: int.parse(state.pathParameters['sessionId']!)),
       ),
 
-      // ─── Organization routes ──────────────────────────────────────────
+      // ─── Organization Shell ───────────────────────────────────────────
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => _OrgShell(shell: shell),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.orgDashboard, builder: (_, __) => const OrgDashboardScreen()),
+            GoRoute(path: AppRoutes.orgDashboard,
+                builder: (_, __) => const OrgDashboardScreen()),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
@@ -287,12 +329,15 @@ GoRouter appRouter(Ref ref) {
               builder: (_, __) => const OrgEventListScreen(),
               routes: [
                 GoRoute(path: 'create', builder: (_, __) => const OrgEventFormScreen()),
-                GoRoute(path: ':eventId', builder: (_, state) => const OrgEventListScreen()),
+                GoRoute(
+                    path: ':eventId',
+                    builder: (_, state) => const OrgEventListScreen()),
               ],
             ),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.orgMembers, builder: (_, __) => const OrgMemberListScreen()),
+            GoRoute(path: AppRoutes.orgMembers,
+                builder: (_, __) => const OrgMemberListScreen()),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
@@ -329,11 +374,13 @@ GoRouter appRouter(Ref ref) {
                   routes: [
                     GoRoute(
                       path: ':announcementId',
-                      builder: (_, state) => AnnouncementDetailScreen(id: state.pathParameters['announcementId']!),
+                      builder: (_, state) => AnnouncementDetailScreen(
+                          id: state.pathParameters['announcementId']!),
                     ),
                   ],
                 ),
-                GoRoute(path: 'notification', builder: (_, __) => const NotificationScreen()),
+                GoRoute(path: 'notification',
+                    builder: (_, __) => const NotificationScreen()),
               ],
             ),
           ]),
@@ -345,11 +392,13 @@ GoRouter appRouter(Ref ref) {
                 GoRoute(path: 'create', builder: (_, __) => const ScheduleFormScreen()),
                 GoRoute(
                   path: ':scheduleId',
-                  builder: (_, state) => ScheduleDetailScreen(id: state.pathParameters['scheduleId']!),
+                  builder: (_, state) =>
+                      ScheduleDetailScreen(id: state.pathParameters['scheduleId']!),
                   routes: [
                     GoRoute(
                       path: 'edit',
-                      builder: (_, state) => ScheduleFormScreen(id: state.pathParameters['scheduleId']),
+                      builder: (_, state) =>
+                          ScheduleFormScreen(id: state.pathParameters['scheduleId']),
                     ),
                   ],
                 ),
@@ -364,11 +413,13 @@ GoRouter appRouter(Ref ref) {
                 GoRoute(path: 'create', builder: (_, __) => const TaskFormScreen()),
                 GoRoute(
                   path: ':taskId',
-                  builder: (_, state) => TaskDetailScreen(id: state.pathParameters['taskId']!),
+                  builder: (_, state) =>
+                      TaskDetailScreen(id: state.pathParameters['taskId']!),
                   routes: [
                     GoRoute(
                       path: 'edit',
-                      builder: (_, state) => TaskFormScreen(id: state.pathParameters['taskId']),
+                      builder: (_, state) =>
+                          TaskFormScreen(id: state.pathParameters['taskId']),
                     ),
                   ],
                 ),
@@ -384,7 +435,8 @@ GoRouter appRouter(Ref ref) {
                 GoRoute(path: 'new-group', builder: (_, __) => const CreateGroupScreen()),
                 GoRoute(
                   path: ':conversationId',
-                  builder: (_, state) => ChatScreen(conversationId: state.pathParameters['conversationId']!),
+                  builder: (_, state) =>
+                      ChatScreen(conversationId: state.pathParameters['conversationId']!),
                 ),
               ],
             ),
@@ -394,10 +446,14 @@ GoRouter appRouter(Ref ref) {
               path: AppRoutes.profile,
               builder: (_, __) => const ProfileScreen(),
               routes: [
-                GoRoute(path: 'edit',                     builder: (_, __) => const EditProfileScreen()),
-                GoRoute(path: 'gamification/quests',      builder: (_, __) => const DailyQuestScreen()),
-                GoRoute(path: 'gamification/achievements',builder: (_, __) => const AchievementScreen()),
-                GoRoute(path: 'gamification/leaderboard', builder: (_, __) => const LeaderboardScreen()),
+                GoRoute(path: 'edit',
+                    builder: (_, __) => const EditProfileScreen()),
+                GoRoute(path: 'gamification/quests',
+                    builder: (_, __) => const DailyQuestScreen()),
+                GoRoute(path: 'gamification/achievements',
+                    builder: (_, __) => const AchievementScreen()),
+                GoRoute(path: 'gamification/leaderboard',
+                    builder: (_, __) => const LeaderboardScreen()),
               ],
             ),
           ]),
@@ -407,14 +463,13 @@ GoRouter appRouter(Ref ref) {
   );
 }
 
-String _homeForRole(String? role) {
-  switch (role) {
-    case 'lecturer':     return AppRoutes.lecturerDashboard;
-    case 'organization': return AppRoutes.orgDashboard;
-    case 'admin':        return AppRoutes.adminDashboard;
-    default:             return AppRoutes.dashboard;
-  }
-}
+String _homeForRole(String? role) => switch (role) {
+  'lecturer'     => AppRoutes.lecturerDashboard,
+  'organization' => AppRoutes.orgDashboard,
+  'org_admin'    => AppRoutes.orgDashboard,
+  'admin'        => AppRoutes.adminDashboard,
+  _              => AppRoutes.dashboard,
+};
 
 // ─── Router refresh notifier ──────────────────────────────────────────────────
 class _RouterRefreshNotifier extends ChangeNotifier {
@@ -437,11 +492,11 @@ class _AppShell extends ConsumerWidget {
   const _AppShell({required this.navigationShell});
 
   static const _destinations = [
-    (icon: Icons.dashboard_outlined,        active: Icons.dashboard_rounded,        label: 'Beranda'),
-    (icon: Icons.calendar_today_outlined,   active: Icons.calendar_today_rounded,   label: 'Jadwal'),
-    (icon: Icons.task_alt_outlined,         active: Icons.task_alt_rounded,         label: 'Tugas'),
-    (icon: Icons.chat_bubble_outline_rounded, active: Icons.chat_bubble_rounded,    label: 'Chat'),
-    (icon: Icons.person_outline_rounded,    active: Icons.person_rounded,           label: 'Profil'),
+    (icon: Icons.dashboard_outlined,          active: Icons.dashboard_rounded,        label: 'Beranda'),
+    (icon: Icons.calendar_today_outlined,     active: Icons.calendar_today_rounded,   label: 'Jadwal'),
+    (icon: Icons.task_alt_outlined,           active: Icons.task_alt_rounded,         label: 'Tugas'),
+    (icon: Icons.chat_bubble_outline_rounded, active: Icons.chat_bubble_rounded,      label: 'Chat'),
+    (icon: Icons.person_outline_rounded,      active: Icons.person_rounded,           label: 'Profil'),
   ];
 
   @override
@@ -467,14 +522,23 @@ class _AppShell extends ConsumerWidget {
         top: false,
         child: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: (i) => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
+          onDestinationSelected: (i) =>
+              navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
           destinations: _destinations.indexed.map((entry) {
             final i = entry.$1;
             final d = entry.$2;
             final showBadge = i == 3 && chatUnread > 0;
             return NavigationDestination(
-              icon: showBadge ? Badge(label: Text(chatUnread > 99 ? '99+' : '$chatUnread'), child: Icon(d.icon)) : Icon(d.icon),
-              selectedIcon: showBadge ? Badge(label: Text(chatUnread > 99 ? '99+' : '$chatUnread'), child: Icon(d.active)) : Icon(d.active),
+              icon: showBadge
+                  ? Badge(
+                      label: Text(chatUnread > 99 ? '99+' : '$chatUnread'),
+                      child: Icon(d.icon))
+                  : Icon(d.icon),
+              selectedIcon: showBadge
+                  ? Badge(
+                      label: Text(chatUnread > 99 ? '99+' : '$chatUnread'),
+                      child: Icon(d.active))
+                  : Icon(d.active),
               label: d.label,
             );
           }).toList(),
@@ -484,15 +548,16 @@ class _AppShell extends ConsumerWidget {
   }
 }
 
-// ─── Lecturer Shell ───────────────────────────────────────────────────────────
+// ─── Lecturer Shell (4 tabs) ──────────────────────────────────────────────────
 class _LecturerShell extends StatelessWidget {
   const _LecturerShell({required this.shell});
   final StatefulNavigationShell shell;
 
   static const _destinations = [
-    (icon: Icons.dashboard_outlined,     active: Icons.dashboard_rounded, label: 'Beranda'),
-    (icon: Icons.school_outlined,        active: Icons.school_rounded,    label: 'Kelas'),
-    (icon: Icons.person_outline_rounded, active: Icons.person_rounded,    label: 'Profil'),
+    (icon: Icons.dashboard_outlined,     active: Icons.dashboard_rounded,     label: 'Beranda'),
+    (icon: Icons.school_outlined,        active: Icons.school_rounded,        label: 'Kelas'),
+    (icon: Icons.assignment_outlined,    active: Icons.assignment_rounded,    label: 'Penilaian'),
+    (icon: Icons.person_outline_rounded, active: Icons.person_rounded,        label: 'Profil'),
   ];
 
   @override
@@ -508,9 +573,12 @@ class _LecturerShell extends StatelessWidget {
           top: false,
           child: NavigationBar(
             selectedIndex: shell.currentIndex,
-            onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+            onDestinationSelected: (i) =>
+                shell.goBranch(i, initialLocation: i == shell.currentIndex),
             destinations: _destinations.map((d) => NavigationDestination(
-              icon: Icon(d.icon), selectedIcon: Icon(d.active), label: d.label,
+              icon: Icon(d.icon),
+              selectedIcon: Icon(d.active),
+              label: d.label,
             )).toList(),
           ),
         ),
@@ -525,10 +593,10 @@ class _OrgShell extends StatelessWidget {
   final StatefulNavigationShell shell;
 
   static const _destinations = [
-    (icon: Icons.dashboard_outlined,          active: Icons.dashboard_rounded,         label: 'Beranda'),
-    (icon: Icons.event_outlined,              active: Icons.event_rounded,             label: 'Event'),
-    (icon: Icons.people_outline_rounded,      active: Icons.people_rounded,            label: 'Anggota'),
-    (icon: Icons.person_outline_rounded,      active: Icons.person_rounded,            label: 'Profil'),
+    (icon: Icons.dashboard_outlined,     active: Icons.dashboard_rounded,     label: 'Beranda'),
+    (icon: Icons.event_outlined,         active: Icons.event_rounded,         label: 'Event'),
+    (icon: Icons.people_outline_rounded, active: Icons.people_rounded,        label: 'Anggota'),
+    (icon: Icons.person_outline_rounded, active: Icons.person_rounded,        label: 'Profil'),
   ];
 
   @override
@@ -544,9 +612,12 @@ class _OrgShell extends StatelessWidget {
           top: false,
           child: NavigationBar(
             selectedIndex: shell.currentIndex,
-            onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+            onDestinationSelected: (i) =>
+                shell.goBranch(i, initialLocation: i == shell.currentIndex),
             destinations: _destinations.map((d) => NavigationDestination(
-              icon: Icon(d.icon), selectedIcon: Icon(d.active), label: d.label,
+              icon: Icon(d.icon),
+              selectedIcon: Icon(d.active),
+              label: d.label,
             )).toList(),
           ),
         ),
@@ -563,16 +634,24 @@ class _AdminDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(backgroundColor: AppColors.surface, title: const Text('Admin Dashboard')),
+      appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          title: const Text('Admin Dashboard')),
       body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.admin_panel_settings_rounded, color: AppColors.roleAdmin, size: 72),
+            Icon(Icons.admin_panel_settings_rounded,
+                color: AppColors.roleAdmin, size: 72),
             SizedBox(height: 16),
-            Text('Admin Panel', style: TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold)),
+            Text('Admin Panel',
+                style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('Fitur admin tersedia via web dashboard', style: TextStyle(color: AppColors.textMuted)),
+            Text('Fitur admin tersedia via web dashboard',
+                style: TextStyle(color: AppColors.textMuted)),
           ],
         ),
       ),

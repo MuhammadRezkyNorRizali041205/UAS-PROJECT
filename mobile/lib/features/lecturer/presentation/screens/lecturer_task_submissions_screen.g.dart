@@ -13,8 +13,12 @@ part of 'lecturer_task_submissions_screen.dart';
 final taskSubmissionsProvider = TaskSubmissionsFamily._();
 
 final class TaskSubmissionsProvider extends $FunctionalProvider<
-        AsyncValue<List<dynamic>>, List<dynamic>, FutureOr<List<dynamic>>>
-    with $FutureModifier<List<dynamic>>, $FutureProvider<List<dynamic>> {
+        AsyncValue<Map<String, dynamic>>,
+        Map<String, dynamic>,
+        FutureOr<Map<String, dynamic>>>
+    with
+        $FutureModifier<Map<String, dynamic>>,
+        $FutureProvider<Map<String, dynamic>> {
   TaskSubmissionsProvider._(
       {required TaskSubmissionsFamily super.from,
       required (
@@ -42,12 +46,12 @@ final class TaskSubmissionsProvider extends $FunctionalProvider<
 
   @$internal
   @override
-  $FutureProviderElement<List<dynamic>> $createElement(
+  $FutureProviderElement<Map<String, dynamic>> $createElement(
           $ProviderPointer pointer) =>
       $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<dynamic>> create(Ref ref) {
+  FutureOr<Map<String, dynamic>> create(Ref ref) {
     final argument = this.argument as (
       String,
       String,
@@ -70,12 +74,12 @@ final class TaskSubmissionsProvider extends $FunctionalProvider<
   }
 }
 
-String _$taskSubmissionsHash() => r'f9968a16387ee624b90ce1438d5a3250b3f366b2';
+String _$taskSubmissionsHash() => r'208d6763c28a660ba7b6ca3d1efd1c7db1add297';
 
 final class TaskSubmissionsFamily extends $Family
     with
         $FunctionalFamilyOverride<
-            FutureOr<List<dynamic>>,
+            FutureOr<Map<String, dynamic>>,
             (
               String,
               String,

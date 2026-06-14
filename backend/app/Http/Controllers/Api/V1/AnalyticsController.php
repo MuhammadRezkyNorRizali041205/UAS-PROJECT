@@ -14,7 +14,25 @@ class AnalyticsController extends Controller
 
     public function dashboard(Request $request): JsonResponse
     {
-        $data = $this->service->getDashboardData($request->user());
+        $user = $request->user();
+
+        if ($user->role !== 'student') {
+            return $this->success([
+                'greeting'           => 'Selamat datang, ' . $user->name . '!',
+                'today_schedules'    => [],
+                'upcoming_deadlines' => [],
+                'weekly_stats'       => [
+                    'total_tasks'       => 0,
+                    'completed_tasks'   => 0,
+                    'overdue_tasks'     => 0,
+                    'completion_rate'   => 0,
+                ],
+                'streak'           => 0,
+                'total_schedules'  => 0,
+            ], 'Dashboard data.');
+        }
+
+        $data = $this->service->getDashboardData($user);
         return $this->success($data, 'Dashboard data.');
     }
 

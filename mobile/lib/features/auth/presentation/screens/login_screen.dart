@@ -54,10 +54,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = authState is AuthLoading;
     final errorMsg = authState is AuthError ? (authState).message : null;
 
-    // Navigate on success
+    // Navigate on success — route berdasarkan role user
     ref.listen(authProvider, (_, next) {
       if (next is AuthAuthenticated) {
-        context.go('/dashboard');
+        context.go(next.user.dashboardRoute);
       }
     });
 

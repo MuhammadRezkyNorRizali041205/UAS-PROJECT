@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             DailyQuestSeeder::class,
             AnnouncementSeeder::class,
             RoleSeeder::class,
+            LecturerSeeder::class,
         ]);
     }
 }

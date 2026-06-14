@@ -48,7 +48,7 @@ class LecturerTaskController extends Controller
         ]);
 
         $task = $this->service->createClassTask($class, $request->user(), $data);
-        return $this->success(data: $task, message: 'Tugas berhasil dibuat.', statusCode: 201);
+        return $this->success(data: $task, message: 'Tugas berhasil dibuat.', code: 201);
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -69,18 +69,49 @@ class LecturerTaskController extends Controller
             $q->where('lecturer_id', $request->user()->id)
         )->findOrFail($id);
 
-        $submissions = $this->service->getSubmissions($task);
+        $result      = $this->service->getSubmissions($task);
+        $submissions = $result['submissions'];
 
         $filter = $request->query('filter');
         if ($filter === 'ungraded') {
-            $submissions = array_filter($submissions, fn ($s) => $s['status'] === 'submitted');
+            $submissions = array_values(array_filter($submissions, fn ($s) => $s['status'] === 'submitted'));
         } elseif ($filter === 'graded') {
-            $submissions = array_filter($submissions, fn ($s) => $s['status'] === 'graded');
+            $submissions = array_values(array_filter($submissions, fn ($s) => $s['status'] === 'graded'));
         } elseif ($filter === 'late') {
-            $submissions = array_filter($submissions, fn ($s) => $s['status'] === 'late');
+            $submissions = array_values(array_filter($submissions, fn ($s) => $s['status'] === 'late'));
+        } elseif ($filter === 'pending') {
+            $submissions = array_values(array_filter($submissions, fn ($s) => $s['status'] === 'pending'));
         }
 
-        return $this->success(data: array_values($submissions));
+        return $this->success(data: ['submissions' => $submissions, 'summary' => $result['summary']]);
+    }
+
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $task = ClassTask::whereHas('classRoom', fn ($q) =>
+            $q->where('lecturer_id', $request->user()->id)
+        )->findOrFail($id);
+
+        $data = $request->validate([
+            'title'          => 'sometimes|string|max:255',
+            'description'    => 'nullable|string',
+            'deadline'       => 'sometimes|date',
+            'max_score'      => 'nullable|integer|min:1|max:1000',
+            'attachment_url' => 'nullable|url',
+        ]);
+
+        $task->update($data);
+        return $this->success(data: $task->fresh(), message: 'Tugas berhasil diperbarui.');
+    }
+
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        $task = ClassTask::whereHas('classRoom', fn ($q) =>
+            $q->where('lecturer_id', $request->user()->id)
+        )->findOrFail($id);
+
+        $task->delete();
+        return $this->success(message: 'Tugas berhasil dihapus.');
     }
 
     public function grade(Request $request, string $submissionId): JsonResponse

@@ -1,11 +1,10 @@
 // lib/features/auth/presentation/screens/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/theme/app_colors.dart';
+import '../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -19,13 +18,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final AnimationController _controller;
   late final Animation<double> _scaleAnim;
   late final Animation<double> _fadeAnim;
-
-  static const _storage = FlutterSecureStorage(
-    webOptions: WebOptions(
-      dbName: 'smart_campus_db',
-      publicKey: 'SmartCampusKey16',
-    ),
-  );
 
   @override
   void initState() {
@@ -50,19 +42,36 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _checkAndRedirect() async {
-    // Minimum splash duration
+    // Minimum splash duration for animation
     await Future.delayed(const Duration(milliseconds: 2000));
     if (!mounted) return;
 
-    try {
-      final token = await _storage.read(key: AppConstants.tokenKey);
+    // Wait for authProvider to finish checking the stored session
+    // (getMe() call has up to 8s timeout; poll every 100ms, max 6s)
+    AuthState authState = ref.read(authProvider);
+    for (int i = 0; i < 60; i++) {
+      if (authState is! AuthInitial && authState is! AuthLoading) break;
+      await Future.delayed(const Duration(milliseconds: 100));
       if (!mounted) return;
-      context.go(token != null && token.isNotEmpty ? '/dashboard' : '/login');
-    } catch (_) {
-      if (!mounted) return;
+      authState = ref.read(authProvider);
+    }
+
+    if (!mounted) return;
+
+    if (authState is AuthAuthenticated) {
+      context.go(_homeForRole(authState.user.role));
+    } else {
       context.go('/login');
     }
   }
+
+  String _homeForRole(String role) => switch (role) {
+    'lecturer'     => '/lecturer/dashboard',
+    'organization' => '/org/dashboard',
+    'org_admin'    => '/org/dashboard',
+    'admin'        => '/admin/dashboard',
+    _              => '/dashboard',
+  };
 
   @override
   void dispose() {
