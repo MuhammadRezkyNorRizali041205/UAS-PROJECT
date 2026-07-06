@@ -10,7 +10,12 @@ class KelasMataKuliah extends Model
 {
     protected $table = 'kelas_mata_kuliah';
 
-    protected $fillable = ['kelas_id', 'mata_kuliah_id', 'dosen_id'];
+    protected $fillable = ['kelas_id', 'mata_kuliah_id', 'dosen_id', 'deadline', 'judul_tugas'];
+
+    protected function casts(): array
+    {
+        return ['deadline' => 'datetime'];
+    }
 
     public function kelas(): BelongsTo
     {

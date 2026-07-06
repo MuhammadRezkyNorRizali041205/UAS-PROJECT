@@ -7,9 +7,72 @@ use App\Http\Controllers\Controller;
 use App\Models\NotificationLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class NotificationController extends Controller
 {
+    // ── SSE Stream ────────────────────────────────────────────────────────────
+
+    public function stream(Request $request): StreamedResponse
+    {
+        $userId  = $request->user()->id;
+        $lastId  = (int) $request->header('Last-Event-ID', 0);
+
+        return response()->stream(function () use ($userId, $lastId) {
+            // Konfirmasi koneksi
+            echo "event: connected\n";
+            echo "data: {\"message\":\"SSE connected\"}\n\n";
+            ob_flush();
+            flush();
+
+            $iteration = 0;
+
+            while (true) {
+                if (connection_aborted()) break;
+
+                $notifications = NotificationLog::where('user_id', $userId)
+                    ->when($lastId > 0, fn ($q) => $q->where('id', '>', $lastId))
+                    ->whereNull('read_at')
+                    ->orderBy('id')
+                    ->limit(10)
+                    ->get();
+
+                foreach ($notifications as $notif) {
+                    echo "id: {$notif->id}\n";
+                    echo "event: notification\n";
+                    echo 'data: ' . json_encode([
+                        'id'       => $notif->id,
+                        'type'     => $notif->type,
+                        'title'    => $notif->title,
+                        'body'     => $notif->body,
+                        'data'     => $notif->data,
+                        'sent_at'  => $notif->sent_at?->toIso8601String(),
+                    ]) . "\n\n";
+                    $lastId = $notif->id;
+                    ob_flush();
+                    flush();
+                }
+
+                // Heartbeat setiap ~30 detik agar koneksi tidak putus
+                if ($iteration % 15 === 0) {
+                    echo ": heartbeat\n\n";
+                    ob_flush();
+                    flush();
+                }
+
+                $iteration++;
+                sleep(2);
+            }
+        }, 200, [
+            'Content-Type'      => 'text/event-stream',
+            'Cache-Control'     => 'no-cache',
+            'X-Accel-Buffering' => 'no',
+            'Connection'        => 'keep-alive',
+        ]);
+    }
+
+    // ── REST ─────────────────────────────────────────────────────────────────
+
     public function index(Request $request): JsonResponse
     {
         $type = $request->query('type');

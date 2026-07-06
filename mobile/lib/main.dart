@@ -4,11 +4,14 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import 'core/router/app_router.dart';
+import 'core/services/local_notification_service.dart';
+import 'core/services/sse_notification_provider.dart';
 import 'shared/theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   timeago.setLocaleMessages('id', timeago.IdMessages());
+  await LocalNotificationService.init();
   runApp(const ProviderScope(child: SmartCampusApp()));
 }
 
@@ -17,6 +20,7 @@ class SmartCampusApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(sseNotificationListenerProvider); // aktifkan SSE listener
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(

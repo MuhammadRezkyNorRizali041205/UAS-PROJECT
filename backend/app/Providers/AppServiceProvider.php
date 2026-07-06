@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\KelasMataKuliah;
 use App\Models\UserActivity;
+use App\Observers\KelasMataKuliahObserver;
 use App\Observers\UserActivityObserver;
 use App\Repositories\Contracts\AttendanceRepositoryInterface;
 use App\Repositories\Contracts\ScheduleRepositoryInterface;
@@ -49,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
     private function registerGamification(): void
     {
         UserActivity::observe(UserActivityObserver::class);
+        KelasMataKuliah::observe(KelasMataKuliahObserver::class);
 
         \Illuminate\Support\Facades\Event::listen(
             \App\Events\GamificationLevelUp::class,

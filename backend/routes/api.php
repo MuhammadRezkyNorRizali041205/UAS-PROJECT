@@ -89,6 +89,7 @@ Route::prefix('v1')->group(function () {
         Route::get('announcements/{id}', [AnnouncementController::class, 'show']);
 
         // Notifications — static routes before parameterized
+        Route::get('notifications/stream',       [NotificationController::class, 'stream']);
         Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
         Route::patch('notifications/read-all',   [NotificationController::class, 'markAllRead']);
         Route::get('notifications',              [NotificationController::class, 'index']);
