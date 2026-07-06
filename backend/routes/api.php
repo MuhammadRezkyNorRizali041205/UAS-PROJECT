@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\V1\ScheduleController;
 use App\Http\Controllers\Api\V1\SocialFeedController;
 use App\Http\Controllers\Api\V1\StudentClassController;
 use App\Http\Controllers\Api\V1\TaskController;
+use App\Http\Controllers\Api\V1\TugasController;
 
 use App\Http\Controllers\Api\V1\Lecturer\LecturerDashboardController;
 use App\Http\Controllers\Api\V1\Lecturer\LecturerClassController;
@@ -147,6 +148,15 @@ Route::prefix('v1')->group(function () {
             Route::post('request',     [FriendController::class, 'sendRequest']);
             Route::post('{id}/accept', [FriendController::class, 'accept']);
             Route::delete('{id}',      [FriendController::class, 'destroy']);
+        });
+
+        // ─── Tugas UAS (mahasiswa dengan data mahasiswas) ─────────────────────────
+        Route::prefix('tugas-uas')->group(function () {
+            Route::get('mata-kuliah',      [TugasController::class, 'mataKuliahSaya']);
+            Route::post('',                [TugasController::class, 'store']);
+            Route::get('riwayat',          [TugasController::class, 'riwayat']);
+            Route::get('profil',           [TugasController::class, 'profilMahasiswa']);
+            Route::get('{tugas}',          [TugasController::class, 'show']);
         });
 
         // ─── Student Class (role: student) ────────────────────────────────────

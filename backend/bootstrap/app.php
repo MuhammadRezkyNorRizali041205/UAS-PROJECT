@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
+        web: __DIR__.'/../routes/web.php',
         channels: __DIR__.'/../routes/channels.php',
         api: __DIR__ . '/../routes/api.php',
         health: '/up',
@@ -18,7 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
         $middleware->alias([
-            'role' => \App\Http\Middleware\EnsureRole::class,
+            'role'       => \App\Http\Middleware\EnsureRole::class,
+            'admin.role' => \App\Http\Middleware\EnsureAdminRole::class,
         ]);
         // Mobile app uses token-based auth via Sanctum — no stateful API needed
         // Rate limiters are registered in AppServiceProvider

@@ -70,6 +70,12 @@ import '../../features/student_class/presentation/screens/student_class_list_scr
 import '../../features/student_class/presentation/screens/student_class_detail_screen.dart';
 import '../../features/student_class/presentation/screens/student_task_submit_screen.dart';
 
+// Tugas UAS screens
+import '../../features/tugas_uas/presentation/screens/tugas_mata_kuliah_screen.dart';
+import '../../features/tugas_uas/presentation/screens/tugas_riwayat_screen.dart';
+import '../../features/tugas_uas/presentation/screens/tugas_profil_screen.dart';
+import '../../features/tugas_uas/presentation/screens/tugas_submit_screen.dart';
+
 import '../../features/chat/presentation/providers/chat_providers.dart';
 import '../../shared/theme/app_colors.dart';
 
@@ -151,6 +157,12 @@ class AppRoutes {
   static const orgEventsCreate = '/org/events/create';
   static String orgEventDetail(String id) => '/org/events/$id';
   static const orgMembers      = '/org/members';
+
+  // ── Tugas UAS routes ───────────────────────────────────────────────────────
+  static const tugasUasMataKuliah = '/tugas-uas';
+  static const tugasUasRiwayat    = '/tugas-uas/riwayat';
+  static const tugasUasProfil     = '/tugas-uas/profil';
+  static const tugasUasSubmit     = '/tugas-uas/submit';
 
   // ── Admin routes ───────────────────────────────────────────────────────────
   static const adminDashboard = '/admin/dashboard';
@@ -358,6 +370,45 @@ GoRouter appRouter(Ref ref) {
               routes: [
                 GoRoute(path: 'edit', builder: (_, __) => const EditProfileScreen()),
               ],
+            ),
+          ]),
+        ],
+      ),
+
+      // ─── Tugas UAS submit (full-screen, pushed on top) ────────────────
+      GoRoute(
+        path: AppRoutes.tugasUasSubmit,
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          return TugasSubmitScreen(
+            kelasMataKuliahId: extra['kelas_mata_kuliah_id'] as int? ?? 0,
+            namaMk:            extra['nama_mk'] as String? ?? '',
+            namaDosen:         extra['nama_dosen'] as String? ?? '',
+            sudahDikumpulkan:  extra['sudah'] as bool? ?? false,
+          );
+        },
+      ),
+
+      // ─── Tugas UAS Shell (3 tabs) ──────────────────────────────────────
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => _TugasUasShell(shell: shell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.tugasUasMataKuliah,
+              builder: (_, __) => const TugasMataKuliahScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.tugasUasRiwayat,
+              builder: (_, __) => const TugasRiwayatScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.tugasUasProfil,
+              builder: (_, __) => const TugasProfilScreen(),
             ),
           ]),
         ],
@@ -609,6 +660,44 @@ class _OrgShell extends StatelessWidget {
     (icon: Icons.event_outlined,         active: Icons.event_rounded,         label: 'Event'),
     (icon: Icons.people_outline_rounded, active: Icons.people_rounded,        label: 'Anggota'),
     (icon: Icons.person_outline_rounded, active: Icons.person_rounded,        label: 'Profil'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(bottom: false, child: shell),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.border)),
+          color: AppColors.surface,
+        ),
+        child: SafeArea(
+          top: false,
+          child: NavigationBar(
+            selectedIndex: shell.currentIndex,
+            onDestinationSelected: (i) =>
+                shell.goBranch(i, initialLocation: i == shell.currentIndex),
+            destinations: _destinations.map((d) => NavigationDestination(
+              icon: Icon(d.icon),
+              selectedIcon: Icon(d.active),
+              label: d.label,
+            )).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Tugas UAS Shell (3 tabs: Mata Kuliah | Riwayat Tugas | Profil) ───────────
+class _TugasUasShell extends StatelessWidget {
+  const _TugasUasShell({required this.shell});
+  final StatefulNavigationShell shell;
+
+  static const _destinations = [
+    (icon: Icons.menu_book_outlined,       active: Icons.menu_book_rounded,      label: 'Mata Kuliah'),
+    (icon: Icons.history_outlined,         active: Icons.history_rounded,        label: 'Riwayat Tugas'),
+    (icon: Icons.person_outline_rounded,   active: Icons.person_rounded,         label: 'Profil'),
   ];
 
   @override

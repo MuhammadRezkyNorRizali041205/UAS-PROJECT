@@ -80,6 +80,14 @@ class _DashboardBody extends StatelessWidget {
           ),
         ),
 
+        // ── Tugas UAS Banner ─────────────────────────────────────────────
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: _TugasUasBanner(),
+          ),
+        ),
+
         // ── Today's schedules ────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
@@ -225,6 +233,57 @@ class _QuickAccessCard extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Tugas UAS Banner ─────────────────────────────────────────────────────────
+class _TugasUasBanner extends StatelessWidget {
+  const _TugasUasBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push(AppRoutes.tugasUasMataKuliah),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.upload_file_rounded, color: Colors.white, size: 26),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Pengumpulan Tugas UAS',
+                      style: TextStyle(
+                          color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 2),
+                  Text('Kumpulkan tugas ujian mata kuliah Anda',
+                      style: TextStyle(color: Colors.white70, fontSize: 12)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 16),
           ],
         ),
       ),

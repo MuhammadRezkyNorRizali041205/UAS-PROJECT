@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             AnnouncementSeeder::class,
             RoleSeeder::class,
             LecturerSeeder::class,
+            UasSeeder::class,
         ]);
     }
 }
