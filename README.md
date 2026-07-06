@@ -308,8 +308,8 @@ Akses di: **http://localhost:8000/admin/login**
 | Email | `c050424037@mahasiswa.poliban.ac.id` |
 | Password | `password` |
 | NIM | `C050424037` |
-| Kelas | `4A TI` |
-| Program Studi | `Teknik Informatika` |
+| Kelas | `SIKC-4A` |
+| Program Studi | `Sistem Informasi Kota Cerdas` |
 
 ---
 
@@ -319,7 +319,7 @@ Akses di: **http://localhost:8000/admin/login**
 |---|---|
 | Nama | Muhammad Rezky Nor Rizali |
 | NIM | C050424037 |
-| Program Studi | Teknik Informatika |
+| Program Studi | Sistem Informasi Kota Cerdas |
 | Institusi | Politeknik Negeri Banjarmasin |
 | Mata Kuliah | Pemrograman Perangkat Bergerak |
 | Tahun Akademik | 2025/2026 |
