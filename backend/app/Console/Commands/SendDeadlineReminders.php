@@ -49,7 +49,7 @@ class SendDeadlineReminders extends Command
                 // Jangan duplikat — cek apakah sudah ada reminder hari ini
                 $exists = NotificationLog::where('user_id', $mhs->user_id)
                     ->where('type', 'deadline_reminder')
-                    ->whereRaw("data::jsonb->>'kelas_mata_kuliah_id' = ?", [$kmk->id])
+                    ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.kelas_mata_kuliah_id')) = ?", [$kmk->id])
                     ->whereDate('sent_at', today())
                     ->exists();
 
