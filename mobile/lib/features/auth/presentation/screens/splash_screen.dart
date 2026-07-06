@@ -1,8 +1,11 @@
 // lib/features/auth/presentation/screens/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/theme/app_colors.dart';
 import '../providers/auth_provider.dart';
 
@@ -18,6 +21,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final AnimationController _controller;
   late final Animation<double> _scaleAnim;
   late final Animation<double> _fadeAnim;
+
+  // Same WebOptions as _AuthInterceptor and Auth notifier so all reads
+  // hit the same IndexedDB bucket on web.
+  static const _storage = FlutterSecureStorage(
+    webOptions: WebOptions(
+      dbName: 'smart_campus_db',
+      publicKey: 'smart_campus_key',
+    ),
+  );
 
   @override
   void initState() {
@@ -42,25 +54,49 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _checkAndRedirect() async {
-    // Minimum splash duration for animation
     await Future.delayed(const Duration(milliseconds: 2000));
     if (!mounted) return;
 
-    // Wait for authProvider to finish checking the stored session
-    // (getMe() call has up to 8s timeout; poll every 100ms, max 6s)
-    AuthState authState = ref.read(authProvider);
-    for (int i = 0; i < 60; i++) {
-      if (authState is! AuthInitial && authState is! AuthLoading) break;
-      await Future.delayed(const Duration(milliseconds: 100));
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      // Fast-path: read token directly from storage.
+      // On web, flutter_secure_storage uses IndexedDB; it may be empty after
+      // a fresh flutter run even if the user was previously logged in (e.g.
+      // IndexedDB cleared by the browser or hot restart race condition).
+      final token = await _storage.read(key: AppConstants.tokenKey);
+
       if (!mounted) return;
-      authState = ref.read(authProvider);
-    }
 
-    if (!mounted) return;
+      if (token == null || token.isEmpty) {
+        // No stored credentials — show onboarding for new users, login otherwise.
+        final onboarded = prefs.getBool('onboarding_completed') ?? false;
+        context.go(onboarded ? '/login' : '/onboarding');
+        return;
+      }
 
-    if (authState is AuthAuthenticated) {
-      context.go(_homeForRole(authState.user.role));
-    } else {
+      // Token found — wait for authProvider to validate it against the server.
+      // _checkSession() is already running in the background (called in Auth.build).
+      AuthState authState = ref.read(authProvider);
+      for (int i = 0; i < 60; i++) {
+        if (authState is! AuthInitial && authState is! AuthLoading) break;
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return;
+        authState = ref.read(authProvider);
+      }
+
+      if (!mounted) return;
+
+      if (authState is AuthAuthenticated) {
+        context.go(_homeForRole(authState.user.role));
+      } else {
+        // Token was rejected by the server (401) or timed out — go to login.
+        context.go('/login');
+      }
+    } catch (_) {
+      // Storage read error (e.g. web IndexedDB unavailable after restart).
+      // Safe fallback: redirect to login; user can re-authenticate.
+      if (!mounted) return;
       context.go('/login');
     }
   }

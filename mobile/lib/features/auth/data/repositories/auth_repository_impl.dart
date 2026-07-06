@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/network/dio_client.dart' show setCachedToken;
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -152,6 +153,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> clearSession() async {
+    setCachedToken(null);
     await Future.wait([
       _storage.delete(key: AppConstants.tokenKey),
       _storage.delete(key: AppConstants.userKey),
@@ -159,6 +161,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   Future<void> _saveSession(UserModel user, String token) async {
+    setCachedToken(token);
     await Future.wait([
       _storage.write(key: AppConstants.tokenKey, value: token),
       _storage.write(

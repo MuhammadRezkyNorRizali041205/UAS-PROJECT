@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/usecases/login_usecase.dart';
@@ -58,18 +59,25 @@ class Auth extends _$Auth {
 
   @override
   AuthState build() {
+    // Register forceLogout as the global 401 handler so the Dio interceptor
+    // can clear auth state without importing this file (avoids circular import).
+    setDioUnauthorizedCallback(() => Future.microtask(forceLogout));
+    ref.onDispose(() => setDioUnauthorizedCallback(() {}));
+
     _checkSession();
     return const AuthInitial();
   }
 
   Future<void> _checkSession() async {
     try {
-      // Read token directly from storage (avoids repository layer overhead)
       final token = await _storage.read(key: AppConstants.tokenKey);
       if (token == null || token.isEmpty) {
         state = const AuthUnauthenticated();
         return;
       }
+
+      // Populate cache so interceptor can use it immediately on next requests.
+      setCachedToken(token);
 
       // Token present — verify with server (timeout prevents web hang)
       final repo = ref.read(authRepositoryProvider);
@@ -77,14 +85,29 @@ class Auth extends _$Auth {
       result.when(
         success: (user) => state = AuthAuthenticated(user),
         failure: (_, __) {
-          // Token was rejected by server — clear it
+          setCachedToken(null);
           _storage.delete(key: AppConstants.tokenKey);
           _storage.delete(key: AppConstants.userKey);
           state = const AuthUnauthenticated();
         },
       );
     } catch (_) {
+      setCachedToken(null);
       state = const AuthUnauthenticated();
+    }
+  }
+
+  /// Clears all credentials and resets state to unauthenticated.
+  /// Called directly on logout and indirectly by the Dio 401 interceptor.
+  /// The router's redirect listener fires automatically when state changes.
+  Future<void> forceLogout() async {
+    try {
+      setCachedToken(null);
+      await _storage.delete(key: AppConstants.tokenKey);
+      await _storage.delete(key: AppConstants.userKey);
+      state = const AuthUnauthenticated();
+    } catch (_) {
+      // Guard: provider might be disposed if app is shutting down
     }
   }
 
@@ -103,7 +126,10 @@ class Auth extends _$Auth {
     );
 
     result.when(
-      success: (data) => state = AuthAuthenticated(data.user),
+      success: (data) {
+        setCachedToken(data.token);
+        state = AuthAuthenticated(data.user);
+      },
       failure: (msg, exception) {
         final fieldErrors =
             exception is ValidationException ? exception.fieldErrors : null;
@@ -129,7 +155,10 @@ class Auth extends _$Auth {
     );
 
     result.when(
-      success: (data) => state = AuthAuthenticated(data.user),
+      success: (data) {
+        setCachedToken(data.token);
+        state = AuthAuthenticated(data.user);
+      },
       failure: (msg, exception) {
         final fieldErrors =
             exception is ValidationException ? exception.fieldErrors : null;

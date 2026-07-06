@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\MeController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\AnalyticsController;
+use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\AnnouncementController;
 use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\ChatController;
@@ -93,6 +94,9 @@ Route::prefix('v1')->group(function () {
         Route::patch('notifications/{id}/read',  [NotificationController::class, 'markRead']);
         Route::delete('notifications/{id}',      [NotificationController::class, 'destroy']);
 
+        // Search (rate: 30/min)
+        Route::middleware('throttle:30,1')->get('search', [SearchController::class, 'search']);
+
         // Analytics
         Route::get('analytics/dashboard', [AnalyticsController::class, 'dashboard']);
         Route::get('analytics/heatmap',   [AnalyticsController::class, 'heatmap']);
@@ -147,9 +151,10 @@ Route::prefix('v1')->group(function () {
 
         // ─── Student Class (role: student) ────────────────────────────────────
         Route::middleware('role:student')->prefix('student')->group(function () {
-            Route::get('classes',                        [StudentClassController::class, 'myClasses']);
-            Route::get('classes/{classId}',              [StudentClassController::class, 'classDetail']);
-            Route::post('class-tasks/{taskId}/submit',   [StudentClassController::class, 'submitTask']);
+            Route::get('classes',                              [StudentClassController::class, 'myClasses']);
+            Route::get('classes/{classId}',                   [StudentClassController::class, 'classDetail']);
+            Route::post('class-tasks/{taskId}/submit',        [StudentClassController::class, 'submitTask']);
+            Route::get('class-tasks/{taskId}/submission',     [StudentClassController::class, 'mySubmission']);
         });
 
         // ─── Lecturer (role: lecturer) ────────────────────────────────────────

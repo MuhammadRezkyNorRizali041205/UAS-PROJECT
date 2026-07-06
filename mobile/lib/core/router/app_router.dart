@@ -9,6 +9,8 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
+import '../../features/search/presentation/screens/search_screen.dart';
 
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_screen.dart';
@@ -78,9 +80,11 @@ class AppRoutes {
   AppRoutes._();
 
   static const splash         = '/splash';
+  static const onboarding     = '/onboarding';
   static const login          = '/login';
   static const register       = '/register';
   static const forgotPassword = '/forgot-password';
+  static const search         = '/search';
 
   // ── Student bottom nav roots ───────────────────────────────────────────────
   static const dashboard  = '/dashboard';
@@ -170,17 +174,19 @@ GoRouter appRouter(Ref ref) {
       final path      = state.matchedLocation;
       final authState = notifier.authState;
 
-      final isSplash   = path == AppRoutes.splash;
+      final isSplash    = path == AppRoutes.splash;
+      final isOnboarding = path == AppRoutes.onboarding;
       final isAuthRoute = path == AppRoutes.login ||
           path == AppRoutes.register ||
           path == AppRoutes.forgotPassword;
+      final isPublicRoute = isOnboarding || isAuthRoute;
 
       if (authState is AuthInitial || authState is AuthLoading) return null;
 
       if (authState is AuthAuthenticated) {
         final role = authState.user.role;
 
-        if (isSplash || isAuthRoute) return _homeForRole(role);
+        if (isSplash || isPublicRoute) return _homeForRole(role);
 
         final isStudentHome  = path == '/dashboard' || path.startsWith('/dashboard/');
         final isLecturerHome = path.startsWith('/lecturer/');
@@ -193,15 +199,19 @@ GoRouter appRouter(Ref ref) {
         return null;
       }
 
-      if (!isAuthRoute) return AppRoutes.login;
+      if (!isPublicRoute) return AppRoutes.login;
       return null;
     },
     routes: [
       // ─── Splash & Auth ────────────────────────────────────────────────
       GoRoute(path: AppRoutes.splash,         builder: (_, __) => const SplashScreen()),
+      GoRoute(path: AppRoutes.onboarding,     builder: (_, __) => const OnboardingScreen()),
       GoRoute(path: AppRoutes.login,          builder: (_, __) => const LoginScreen()),
       GoRoute(path: AppRoutes.register,       builder: (_, __) => const RegisterScreen()),
       GoRoute(path: AppRoutes.forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
+
+      // ─── Global search ────────────────────────────────────────────────
+      GoRoute(path: AppRoutes.search,         builder: (_, __) => const SearchScreen()),
 
       // ─── Full-screen routes (no bottom nav) ───────────────────────────
       GoRoute(

@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class AppConstants {
   AppConstants._();
 
@@ -8,10 +6,9 @@ class AppConstants {
   static String get baseUrl {
     const envUrl = String.fromEnvironment('BASE_URL', defaultValue: '');
     if (envUrl.isNotEmpty) return envUrl;
-    // 10.0.2.2 is the Android emulator loopback to host; web needs localhost
-    return kIsWeb
-        ? 'http://localhost:9000/api/v1'
-        : 'http://10.0.2.2:9000/api/v1';
+    // localhost works for web and physical devices (via adb reverse tcp:9000 tcp:9000).
+    // If using an emulator, change back to http://10.0.2.2:9000/api/v1
+    return 'http://localhost:9000/api/v1';
   }
 
   // Token storage keys

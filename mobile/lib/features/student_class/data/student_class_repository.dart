@@ -24,4 +24,11 @@ class StudentClassRepository {
         },
         fromJson: (json) => json['data'] as Map<String, dynamic>);
   }
+
+  Future<Map<String, dynamic>> getMySubmission(String taskId) async {
+    return await _client.get<Map<String, dynamic>>(
+      '/student/class-tasks/$taskId/submission',
+      fromJson: (json) => json['data'] as Map<String, dynamic>,
+    );
+  }
 }

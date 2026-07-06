@@ -8,6 +8,22 @@ import '../errors/exceptions.dart';
 
 part 'dio_client.g.dart';
 
+// ─── Global 401 callback ──────────────────────────────────────────────────────
+void Function()? _dioUnauthorizedCallback;
+
+void setDioUnauthorizedCallback(void Function() callback) {
+  _dioUnauthorizedCallback = callback;
+}
+
+// ─── In-memory token cache ────────────────────────────────────────────────────
+// Populated immediately after login/register so the interceptor doesn't have to
+// wait for IndexedDB on the first post-login requests (Flutter Web timing issue).
+String? _cachedToken;
+
+void setCachedToken(String? token) {
+  _cachedToken = token;
+}
+
 @riverpod
 DioClient dioClient(Ref ref) => DioClient();
 
@@ -17,7 +33,7 @@ class DioClient {
   DioClient() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: kIsWeb ? 'http://localhost:9000/api/v1' : AppConstants.baseUrl,
+        baseUrl: AppConstants.baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
@@ -113,6 +129,10 @@ class DioClient {
           'Koneksi timeout. Periksa jaringan Anda.',
         );
 
+      case DioExceptionType.cancel:
+        // Request was cancelled after a 401 logout — suppress silently.
+        return const NetworkException('Request dibatalkan.');
+
       case DioExceptionType.connectionError:
         if (kIsWeb &&
             (e.message?.toLowerCase().contains('xmlhttprequest') ?? false)) {
@@ -153,7 +173,7 @@ class DioClient {
   }
 }
 
-/// Interceptor to inject Bearer token on every request.
+/// Interceptor to inject Bearer token on every request and handle 401 globally.
 class _AuthInterceptor extends Interceptor {
   static const _storage = FlutterSecureStorage(
     webOptions:
@@ -168,7 +188,7 @@ class _AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     try {
-      final token = await _storage.read(key: AppConstants.tokenKey);
+      final token = _cachedToken ?? await _storage.read(key: AppConstants.tokenKey);
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
       }
@@ -179,8 +199,28 @@ class _AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    // 401 is handled at the provider/usecase layer — just pass through
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    if (err.response?.statusCode == 401) {
+      // Wipe credentials so next cold start redirects to login immediately
+      try {
+        await _storage.delete(key: AppConstants.tokenKey);
+      } catch (_) {}
+      try {
+        await _storage.delete(key: AppConstants.userKey);
+      } catch (_) {}
+
+      // Trigger auth state reset via the registered callback.
+      // Runs in a microtask so we never mutate provider state mid-build.
+      _dioUnauthorizedCallback?.call();
+
+      // Reject to complete the pending Future; callers receive AuthException
+      // but the router redirect replaces their widget before it renders.
+      handler.reject(err);
+      return;
+    }
     handler.next(err);
   }
 }

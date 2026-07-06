@@ -11,6 +11,7 @@ import '../../../../shared/widgets/error_state.dart';
 import '../../../notification/presentation/providers/notification_provider.dart';
 import '../../../feed/presentation/providers/feed_providers.dart';
 import '../../../feed/presentation/widgets/like_button.dart';
+import '../../../student_class/presentation/screens/student_class_list_screen.dart';
 import '../../domain/entities/dashboard_data.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/dashboard_skeleton.dart';
@@ -63,6 +64,14 @@ class _DashboardBody extends StatelessWidget {
           ),
         ),
 
+        // ── Search bar ──────────────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: _SearchBar(),
+          ),
+        ),
+
         // ── Stats 2×2 grid ───────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
@@ -100,6 +109,19 @@ class _DashboardBody extends StatelessWidget {
         SliverToBoxAdapter(
           child: _DeadlinesSection(deadlines: data.upcomingDeadlines),
         ),
+
+        // ── Kelas Saya ───────────────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+            child: _SectionHeader(
+              title: 'Kelas Saya',
+              icon: Icons.school_rounded,
+              onMore: () => context.push(AppRoutes.studentClasses),
+            ),
+          ),
+        ),
+        const SliverToBoxAdapter(child: _MyClassesSection()),
 
         // ── Social Feed (3 recent posts) ─────────────────────────────────
         SliverToBoxAdapter(
@@ -537,4 +559,200 @@ class _EmptyChip extends StatelessWidget {
           ],
         ),
       );
+}
+
+// ─── Search bar tap target ────────────────────────────────────────────────────
+class _SearchBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push(AppRoutes.search),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Cari jadwal, tugas, pengumuman...',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Kelas Saya Section ───────────────────────────────────────────────────────
+class _MyClassesSection extends ConsumerWidget {
+  const _MyClassesSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(myClassesProvider);
+
+    return async.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (list) {
+        if (list.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: _EmptyChip(
+              icon: Icons.school_outlined,
+              label: 'Belum terdaftar di kelas manapun',
+            ),
+          );
+        }
+
+        // Urgency banner — if any class has pending tasks, show alert
+        final totalPending = list.fold<int>(
+            0, (sum, c) => sum + ((c['pending_tasks'] as int?) ?? 0));
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (totalPending > 0)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.assignment_late_rounded,
+                          color: AppColors.warning, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$totalPending tugas belum dikumpulkan',
+                        style: const TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            SizedBox(
+              height: 130,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                itemCount: list.length,
+                itemBuilder: (_, i) => _ClassMiniCard(cls: list[i]),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ClassMiniCard extends StatelessWidget {
+  const _ClassMiniCard({required this.cls});
+  final dynamic cls;
+
+  @override
+  Widget build(BuildContext context) {
+    final pending   = (cls['pending_tasks']  as int?) ?? 0;
+    final completed = (cls['completed_tasks'] as int?) ?? 0;
+    final total     = (cls['total_tasks']    as int?) ?? 0;
+
+    return GestureDetector(
+      onTap: () => context.push('/student/classes/${cls['id']}'),
+      child: Container(
+        width: 180,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: pending > 0
+                ? AppColors.warning.withValues(alpha: 0.5)
+                : AppColors.border,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.roleStudent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.menu_book_rounded,
+                      color: AppColors.roleStudent, size: 16),
+                ),
+                const Spacer(),
+                if (pending > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('$pending',
+                        style: const TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold)),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              cls['course_name'] ?? '',
+              style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            if (total > 0)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: total > 0 ? completed / total : 0,
+                      minHeight: 4,
+                      backgroundColor: AppColors.border,
+                      valueColor: const AlwaysStoppedAnimation(AppColors.success),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text('$completed/$total tugas',
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 10)),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
