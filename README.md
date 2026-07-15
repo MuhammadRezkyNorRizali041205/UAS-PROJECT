@@ -1,7 +1,7 @@
 # Sistem Informasi Pengumpulan Tugas UAS Poliban
 
 > **UAS Pemrograman Perangkat Bergerak — Politeknik Negeri Banjarmasin**  
-> Semester 4 · Teknik Informatika · 2025/2026
+> Semester 4 · Sistem Informasi Kota Cerdas · 2025/2026
 
 Aplikasi fullstack untuk pengelolaan dan pengumpulan tugas ujian akhir semester. Terdiri dari **admin panel berbasis web** (Laravel) untuk manajemen data akademik, dan **aplikasi mobile** (Flutter) untuk mahasiswa mengumpulkan tugas UAS secara real-time.
 
